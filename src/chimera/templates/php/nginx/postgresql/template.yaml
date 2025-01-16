@@ -1,0 +1,32 @@
+name: "PHP/Nginx/PostgreSQL Stack"
+type: "PHP Development"
+description: "PHP development environment with Nginx web server and PostgreSQL database"
+version: "1.0"
+author: "ChimeraStack"
+
+# Networking configuration
+network:
+  subnet: "172.19.0.0/16"  # Unique subnet for PostgreSQL template
+  ports:
+    nginx: "8090"
+    pgadmin: "8091"
+    postgres: "5432"
+
+# Environment variables template
+env_template: ".env.example"
+env_variables:
+  PROJECT_NAME:
+    description: "Name of the project (will be used for container naming and networking)"
+    default: "php-app"
+    regex: "^[a-zA-Z][a-zA-Z0-9_-]*$"
+  
+  # Database configurations
+  DB_DATABASE:
+    description: "Database name"
+    default: "${PROJECT_NAME}"
+  DB_USERNAME:
+    description: "Database user"
+    default: "${PROJECT_NAME}"
+  DB_PASSWORD:
+    description: "Database password"
+    default: "secret"
