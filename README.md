@@ -1,107 +1,99 @@
 # ChimeraStack CLI
 
-A template-based development environment manager that simplifies the setup of Docker-based development environments.
+A powerful, template-based development environment manager that simplifies the setup of Docker-based development environments.
 
 ## Features
 
-- Template-based project generation
-- Pre-configured development environments
-- Cross-platform compatibility (Linux, macOS, Windows)
-- Interactive and command-line interfaces
-- Supports PHP and Full-stack development environments
+✨ **Ready-to-Use Templates**
+- **PHP/Nginx Stacks**
+  - MySQL (ports: 8080, 8081)
+  - PostgreSQL (ports: 8090, 8091)
+  - MariaDB (ports: 8093, 8092)
+- **Fullstack Environments**
+  - React + PHP + MySQL (ports: 3003, 8094, 8095)
 
-## Development Setup
+🚀 **Coming Soon**
+- Python development environments
+- Node.js stacks
+- More frontend frameworks
+- Additional database options
 
-You can develop ChimeraStack CLI either inside a Docker container (recommended) or directly on your local machine.
+## Quick Start
 
-### Option 1: Development Inside Docker (Recommended)
+### Installation
 
-This is the recommended approach as it ensures a consistent development environment across all platforms.
-
-1. Prerequisites:
-   - Docker
-   - Docker Compose
-   - Git
-
-2. Clone and Setup:
 ```bash
-# Clone the repository
-git clone https://github.com/Amirofcodes/ChimeraStack_CLI.git
-cd ChimeraStack_CLI
+pip install chimera-cli
+```
 
-# Start the development container
+### Create a Project
+
+1. Create a new project:
+```bash
+chimera create my-project
+```
+
+2. Choose your template using the interactive arrow-key menu:
+```
+? Choose a template: (Use arrow keys)
+❯ php/nginx/mysql - PHP development environment with Nginx web server and MySQL database
+  php/nginx/postgresql - PHP development environment with Nginx web server and PostgreSQL database
+  php/nginx/mariadb - PHP development environment with Nginx web server and MariaDB database
+  fullstack/react-php/mysql-nginx - Complete fullstack development environment with React, PHP backend, and MySQL database
+```
+
+3. Navigate to your project:
+```bash
+cd my-project
+```
+
+4. Start your development environment:
+```bash
 docker-compose up -d
-
-# Enter the container
-docker exec -it chimerastack_cli-cli-dev-1 bash
-
-# Inside container: Install the package in development mode
-pip install -e .
 ```
 
-3. Development Workflow:
-   - Code files are synced between your host machine and the container
-   - Edit files using your preferred editor on your host machine
-   - Run tests and CLI commands inside the container
-   - The virtual environment and dependencies are managed inside the container
+## Key Benefits
 
-### Option 2: Local Development
-
-If you prefer developing directly on your machine:
-
-1. Prerequisites:
-   - Python 3.11+
-   - pip
-   - virtualenv or venv
-
-2. Setup:
-```bash
-# Clone the repository
-git clone https://github.com/Amirofcodes/ChimeraStack_CLI.git
-cd ChimeraStack_CLI
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies and package in development mode
-pip install -r requirements.txt
-pip install -e .
-```
-
-## Development Commands
-
-Common commands for both development approaches:
-
-```bash
-# Run tests
-pytest
-
-# Run the CLI
-chimera --help
-
-# Create a new project
-chimera create <project-name> --template <template-name>
-```
+- 🎯 **Zero Configuration**: Pre-configured development environments that work out of the box
+- 🔄 **Consistent Environments**: Ensure your team uses the same development setup
+- 🛠️ **Development Ready**: Hot-reload, debugging tools, and development utilities included
+- 🔌 **Port Isolation**: Run multiple projects simultaneously without conflicts
+- 🔒 **Secure Defaults**: Security best practices configured by default
 
 ## Available Templates
 
-1. PHP/Nginx Configurations:
-   - mysql (ports: 172.18.0.x:80xx)
-   - postgresql (ports: 172.19.0.x:80xx)
-   - mariadb (ports: 172.20.0.x:80xx)
+### PHP/Nginx/MySQL Stack
+- Web server: localhost:8080
+- phpMyAdmin: localhost:8081
+- MySQL: localhost:3306
 
-2. Fullstack Configurations:
-   - react-php/mysql-nginx (ports: 172.21.0.x:80xx)
+### PHP/Nginx/PostgreSQL Stack
+- Web server: localhost:8090
+- pgAdmin: localhost:8091
+- PostgreSQL: localhost:5432
 
-## Contributing
+### PHP/Nginx/MariaDB Stack
+- Web server: localhost:8093
+- phpMyAdmin: localhost:8092
+- MariaDB: localhost:3307
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Fullstack React/PHP/MySQL Stack
+- React frontend: localhost:3003
+- PHP backend: localhost:8094
+- phpMyAdmin: localhost:8095
+- MySQL: localhost:3306
+
+## Status
+
+ChimeraStack CLI is under active development. We're continuously adding new templates and features to support more development scenarios. Stay tuned for upcoming templates including Python, Node.js, and additional frontend frameworks.
+
+## Support
+
+For issues, feature requests, or questions:
+- Create an issue on GitHub
+- Check our documentation
+- Join our community discussions
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.
