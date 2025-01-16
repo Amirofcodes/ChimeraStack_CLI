@@ -1,0 +1,96 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "${REACT_APP_PORT}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    environment:
+      - WDS_SOCKET_HOST=0.0.0.0
+      - WDS_SOCKET_PORT=${REACT_APP_PORT}
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - REACT_APP_API_URL=http://localhost:${BACKEND_PORT}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "${BACKEND_PORT}:80"
+    volumes:
+      - ./backend/src:/var/www/html
+      - ./backend/logs:/var/log
+    networks:
+      - app-network
+    env_file:
+      - .env
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DB=${MYSQL_DB}
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/db-status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  database:
+    image: mysql:8.0
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "${PHPMYADMIN_PORT}:80"
+    env_file:
+      - .env
+    environment:
+      PMA_HOST: ${PMA_HOST}
+      PMA_USER: ${PMA_USER}
+      PMA_PASSWORD: ${PMA_PASSWORD}
+    networks:
+      - app-network
+    depends_on:
+      database:
+        condition: service_healthy
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
+    driver: local
