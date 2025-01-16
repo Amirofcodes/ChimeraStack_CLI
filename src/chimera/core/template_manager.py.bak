@@ -1,0 +1,151 @@
+"""
+Template management system for ChimeraStack CLI.
+"""
+from pathlib import Path
+from typing import Dict, List
+import yaml
+import shutil
+import os
+from rich.console import Console
+
+console = Console()
+
+class TemplateManager:
+    """Manages discovery, validation, and loading of project templates."""
+    
+    def __init__(self, templates_dir: Path | str = None):
+        """Initialize the template manager."""
+        if templates_dir is None:
+            # Default to the templates directory in the package
+            templates_dir = Path(__file__).parent.parent / 'templates'
+        self.templates_dir = Path(templates_dir)
+    
+    def get_available_templates(self) -> List[Dict[str, str]]:
+        """Get list of available templates with metadata."""
+        templates = []
+        
+        # Walk through template directories
+        for template_path in self.templates_dir.glob('**/*'):
+            if template_path.is_dir() and self._is_valid_template(template_path):
+                template_info = self._get_template_info(template_path)
+                if template_info:
+                    templates.append(template_info)
+        
+        return templates
+    
+    def _is_valid_template(self, path: Path) -> bool:
+        """Check if directory contains a valid template."""
+        # A valid template must have:
+        # 1. docker-compose.yml
+        # 2. Template configuration (template.yaml)
+        return (
+            (path / 'docker-compose.yml').exists() and
+            (path / 'template.yaml').exists()
+        )
+    
+    def _get_template_info(self, path: Path) -> Dict[str, str] | None:
+        """Get template metadata from template.yaml."""
+        try:
+            config_path = path / 'template.yaml'
+            if not config_path.exists():
+                return None
+                
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+                
+            return {
+                'id': str(path.relative_to(self.templates_dir)),
+                'name': config.get('name', ''),
+                'type': config.get('type', ''),
+                'description': config.get('description', ''),
+                'path': str(path)
+            }
+        except Exception as e:
+            print(f"Error reading template config from {path}: {e}")
+            return None
+
+    def get_template(self, template_id: str) -> Dict[str, str] | None:
+        """Get specific template by ID."""
+        template_path = self.templates_dir / template_id
+        if self._is_valid_template(template_path):
+            return self._get_template_info(template_path)
+        return None
+
+    def create_project(self, template_id: str, project_name: str, target_dir: Path | str = None) -> bool:
+        """
+        Create a new project from a template.
+        
+        Args:
+            template_id: The ID of the template to use
+            project_name: Name of the project to create
+            target_dir: Directory where to create the project (default: current directory)
+        
+        Returns:
+            bool: True if project was created successfully, False otherwise
+        """
+        try:
+            # Get template path
+            template_path = self.templates_dir / template_id
+            if not self._is_valid_template(template_path):
+                console.print(f"[red]Error:[/] Template {template_id} not found or invalid")
+                return False
+                
+            # Determine target directory
+            if target_dir is None:
+                target_dir = Path.cwd() / project_name
+            else:
+                target_dir = Path(target_dir) / project_name
+                
+            # Check if directory already exists
+            if target_dir.exists():
+                console.print(f"[red]Error:[/] Directory {target_dir} already exists")
+                return False
+                
+            # Copy template files
+            shutil.copytree(template_path, target_dir, ignore=shutil.ignore_patterns('template.yaml'))
+            
+            # Load template configuration
+            with open(template_path / 'template.yaml') as f:
+                template_config = yaml.safe_load(f)
+                
+            # Process environment file if it exists
+            env_template = template_config.get('env_template')
+            if env_template and (template_path / env_template).exists():
+                self._process_env_file(template_path / env_template, target_dir / '.env', {
+                    'PROJECT_NAME': project_name
+                })
+                
+            console.print(f"[green]✓[/] Project created successfully at {target_dir}")
+            return True
+            
+        except Exception as e:
+            console.print(f"[red]Error creating project:[/] {str(e)}")
+            # If something went wrong, try to clean up
+            if 'target_dir' in locals() and target_dir.exists():
+                shutil.rmtree(target_dir)
+            return False
+
+    def _process_env_file(self, src_path: Path, dest_path: Path, variables: dict) -> None:
+        """Process environment file, replacing variables."""
+        try:
+            with open(src_path) as f:
+                content = f.read()
+            
+            # First, process PROJECT_NAME variable as it might be referenced by other variables
+            project_name = variables.get('PROJECT_NAME', '')
+            content = content.replace('${PROJECT_NAME}', project_name)
+            
+            # Then process all other variables
+            for key, value in variables.items():
+                if key != 'PROJECT_NAME':  # Skip PROJECT_NAME as it's already processed
+                    content = content.replace(f"${{{key}}}", str(value))
+                    content = content.replace(f"${key}", str(value))
+            
+            # Write processed file
+            with open(dest_path, 'w') as f:
+                f.write(content)
+                
+            console.print(f"[green]✓[/] Environment file processed: {dest_path}")
+        except Exception as e:
+            console.print(f"[red]Error processing environment file:[/] {str(e)}")
+            raise
