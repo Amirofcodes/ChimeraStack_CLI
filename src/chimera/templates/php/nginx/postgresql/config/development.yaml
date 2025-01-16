@@ -1,0 +1,81 @@
+project:
+  name: ${PROJECT_NAME}
+  language: php
+  framework: none
+  environment: development
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+    - 5432:5432
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
+    networks:
+    - app_network
+    healthcheck:
+      test:
+      - CMD
+      - pg_isready
+      - -U
+      - ${DB_USERNAME}
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  nginx:
+    image: nginx:alpine
+    ports:
+    - 8090:80
+    volumes:
+    - .:/var/www/html:cached
+    - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+    - php
+    networks:
+    - app_network
+    healthcheck:
+      test:
+      - CMD
+      - wget
+      - --quiet
+      - --tries=1
+      - --spider
+      - http://localhost/ping
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  php:
+    volumes:
+    - .:/var/www/html:cached
+    - php_logs:/var/log/php-fpm
+    environment:
+      PHP_DISPLAY_ERRORS: ${PHP_DISPLAY_ERRORS}
+      PHP_ERROR_REPORTING: ${PHP_ERROR_REPORTING}
+      PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT}
+      PHP_MAX_EXECUTION_TIME: ${PHP_MAX_EXECUTION_TIME}
+      PHP_POST_MAX_SIZE: ${PHP_POST_MAX_SIZE}
+      PHP_UPLOAD_MAX_FILESIZE: ${PHP_UPLOAD_MAX_FILESIZE}
+    networks:
+    - app_network
+    healthcheck:
+      test:
+      - CMD
+      - php-fpm
+      - -t
+      interval: 10s
+      timeout: 5s
+      retries: 3
+volumes:
+  postgres_data:
+    driver: local
+    name: ${PROJECT_NAME}_postgres_data
+  php_logs:
+    driver: local
+    name: ${PROJECT_NAME}_php_logs
+networks:
+  app_network:
+    driver: bridge
+    name: ${PROJECT_NAME}_network
