@@ -1,0 +1,35 @@
+name: "PHP/Nginx/MariaDB Stack"
+type: "PHP Development"
+description: "PHP development environment with Nginx web server and MariaDB database"
+version: "1.0"
+author: "ChimeraStack"
+
+# Networking configuration
+network:
+  subnet: "172.20.0.0/16"
+  ports:
+    nginx: "8093"
+    phpmyadmin: "8092"
+    mariadb: "3307"
+
+# Environment variables template
+env_template: ".env.example"
+env_variables:
+  PROJECT_NAME:
+    description: "Name of the project (will be used for container naming and networking)"
+    default: "php-app"
+    regex: "^[a-zA-Z][a-zA-Z0-9_-]*$"
+  
+  # Database configurations
+  DB_DATABASE:
+    description: "Database name"
+    default: "${PROJECT_NAME}"
+  DB_USERNAME:
+    description: "Database user"
+    default: "${PROJECT_NAME}"
+  DB_PASSWORD:
+    description: "Database password"
+    default: "secret"
+  DB_ROOT_PASSWORD:
+    description: "Database root password"
+    default: "rootsecret"
