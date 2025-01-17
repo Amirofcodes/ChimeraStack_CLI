@@ -6,7 +6,8 @@ from rich.console import Console
 from rich.traceback import install
 
 from chimera import __version__
-from chimera.commands import create_command, list_command
+from chimera.commands.create import create_command
+from chimera.commands.list import list_command
 
 # Set up rich error handling
 install(show_locals=True)
@@ -15,10 +16,7 @@ console = Console()
 @click.group()
 @click.version_option(version=__version__)
 def cli():
-    """ChimeraStack CLI - A template-based development environment manager.
-    
-    This tool helps you quickly set up development environments using pre-configured templates.
-    """
+    """ChimeraStack CLI - A template-based development environment manager."""
     pass
 
 @cli.command()
@@ -29,9 +27,11 @@ def create(name: str, template: str | None = None):
     create_command(name, template)
 
 @cli.command()
-def list():
+@click.option('--search', '-s', help='Search for templates')
+@click.option('--category', '-c', help='Filter by category')
+def list(search: str = None, category: str = None):
     """List available templates."""
-    list_command()
+    list_command(search, category)
 
 def main():
     try:
