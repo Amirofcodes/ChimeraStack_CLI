@@ -1,30 +1,75 @@
 <?php
+
 declare(strict_types=1);
 $title = 'ChimeraStack PHP Development Environment';
-$webPort = '8090';
-$dbPort = '5432';
-$pgAdminPort = '8091';
+$webPort = $_ENV['NGINX_PORT'] ?? '8090';
+$dbPort = $_ENV['POSTGRES_PORT'] ?? '5432';
+$pgaPort = $_ENV['PGADMIN_PORT'] ?? '8091';
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title) ?></title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.6; }
-        .status { padding: 1rem; margin: 1rem 0; border-radius: 4px; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .card { border: 1px solid #ddd; border-radius: 4px; padding: 1rem; margin: 1rem 0; }
-        .info { background-color: #e2e3e5; border-color: #d6d8db; }
-        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-        th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .status {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .info {
+            background-color: #e2e3e5;
+            border-color: #d6d8db;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.5rem;
+            border-bottom: 1px solid #ddd;
+        }
     </style>
 </head>
+
 <body>
     <h1><?= htmlspecialchars($title) ?></h1>
-    
+
     <div class="card">
         <h2>Stack Overview</h2>
         <table>
@@ -46,7 +91,7 @@ $pgAdminPort = '8091';
             <tr>
                 <td>Database GUI</td>
                 <td>pgAdmin</td>
-                <td><a href="http://localhost:<?= $pgAdminPort ?>" target="_blank">localhost:<?= $pgAdminPort ?></a></td>
+                <td><a href="http://localhost:<?= $pgaPort ?>" target="_blank">localhost:<?= $pgaPort ?></a></td>
             </tr>
         </table>
     </div>
@@ -77,4 +122,5 @@ $pgAdminPort = '8091';
         ?>
     </div>
 </body>
+
 </html>
