@@ -16,14 +16,15 @@ class PortScanner:
 
         containers = self.docker_client.containers.list(all=True)
         for container in containers:
-            # Get port mappings
-            ports = container.attrs['NetworkSettings']['Ports']
-            if ports:
-                for port_map in ports.values():
-                    if port_map:
-                        self.used_ports.add(int(port_map[0]['HostPort']))
+            config = container.attrs
+            ports = config['NetworkSettings']['Ports'] or {}
+            bindings = config['HostConfig']['PortBindings'] or {}
             
-            # Track container names
+            for ports_map in [ports, bindings]:
+                for binding in ports_map.values():
+                    if binding and binding[0].get('HostPort'):
+                        self.used_ports.add(int(binding[0]['HostPort']))
+            
             self.container_names.add(container.name)
 
         return {
