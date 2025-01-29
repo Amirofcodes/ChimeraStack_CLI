@@ -1,34 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import "./App.css";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8094';
+const API_URL = process.env.REACT_APP_API_URL;
+const FRONTEND_PORT = process.env.REACT_APP_PORT;
+const BACKEND_PORT = process.env.REACT_APP_BACKEND_PORT;
+const PHPMYADMIN_PORT = process.env.REACT_APP_PHPMYADMIN_PORT;
+const MYSQL_PORT = process.env.REACT_APP_MYSQL_PORT;
 
 const App = () => {
-  const [dbStatus, setDbStatus] = useState('Checking...');
-  const [dbVersion, setDbVersion] = useState('');
+  const [dbStatus, setDbStatus] = useState("Checking...");
+  const [dbVersion, setDbVersion] = useState("");
+  const [dbConfig, setDbConfig] = useState(null);
 
   useEffect(() => {
     const checkDatabaseStatus = async () => {
       try {
         const response = await fetch(`${API_URL}/api/db-status`, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
+            Accept: "application/json",
+            "Content-Type": "application/json",
           },
-          credentials: 'omit'
+          credentials: "omit",
         });
-        
+
         const data = await response.json();
         if (data.success) {
-          setDbStatus('Connected');
+          setDbStatus("Connected");
           setDbVersion(data.version);
+          setDbConfig(data.config);
         } else {
-          setDbStatus('Disconnected');
+          setDbStatus(`Error: ${data.error}`);
+          setDbConfig(data.config);
         }
       } catch (error) {
-        console.error('Error:', error);
-        setDbStatus('Error connecting to database');
+        console.error("Error:", error);
+        setDbStatus("Error connecting to database");
       }
     };
 
@@ -53,32 +60,28 @@ const App = () => {
             <tr>
               <td>Frontend</td>
               <td>React</td>
-              <td>
-                <a href="http://localhost:3003" target="_blank" rel="noopener noreferrer">
-                  localhost:3003
-                </a>
-              </td>
+              <td>localhost:{FRONTEND_PORT}</td>
             </tr>
             <tr>
               <td>Backend API</td>
               <td>Nginx + PHP-FPM</td>
-              <td>
-                <a href={`${API_URL}/api`} target="_blank" rel="noopener noreferrer">
-                  localhost:8094/api
-                </a>
-              </td>
+              <td>localhost:{BACKEND_PORT}</td>
             </tr>
             <tr>
               <td>Database</td>
               <td>MySQL</td>
-              <td>localhost:3306</td>
+              <td>localhost:{MYSQL_PORT}</td>
             </tr>
             <tr>
               <td>Database GUI</td>
               <td>phpMyAdmin</td>
               <td>
-                <a href="http://localhost:8095" target="_blank" rel="noopener noreferrer">
-                  localhost:8095
+                <a
+                  href={`http://localhost:${PHPMYADMIN_PORT}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  localhost:{PHPMYADMIN_PORT}
                 </a>
               </td>
             </tr>
@@ -90,12 +93,20 @@ const App = () => {
         <h2>Quick Links</h2>
         <ul>
           <li>
-            <a href={`${API_URL}/api`} target="_blank" rel="noopener noreferrer">
+            <a
+              href={`${API_URL}/api`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               API Status
             </a>
           </li>
           <li>
-            <a href="http://localhost:8095" target="_blank" rel="noopener noreferrer">
+            <a
+              href={`http://localhost:${PHPMYADMIN_PORT}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               phpMyAdmin
             </a>
           </li>
@@ -104,10 +115,29 @@ const App = () => {
 
       <section>
         <h2>Database Connection Status</h2>
-        <div className={`status-indicator ${dbStatus === 'Connected' ? 'status-success' : 'status-error'}`}>
-          {dbStatus === 'Connected'
-            ? `✔ Connected to MySQL Server ${dbVersion}`
-            : `✖ ${dbStatus}`}
+        <div
+          className={`status-indicator ${
+            dbStatus === "Connected" ? "status-success" : "status-error"
+          }`}
+        >
+          {dbStatus === "Connected" ? (
+            <>
+              ✓ Connected to MySQL Server {dbVersion}
+              <br />
+              Database: {dbConfig?.database}
+              <br />
+              User: {dbConfig?.user}
+            </>
+          ) : (
+            <>
+              ✖ {dbStatus}
+              {dbConfig && (
+                <div className="config-debug">
+                  <pre>{JSON.stringify(dbConfig, null, 2)}</pre>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
     </div>

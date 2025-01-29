@@ -20,30 +20,45 @@ switch ($path) {
         break;
 }
 
-function checkDatabaseStatus() {
-    $host = getenv('MYSQL_HOST');
-    $db = getenv('MYSQL_DB');
-    $user = getenv('MYSQL_USER');
-    $pass = getenv('MYSQL_PASSWORD');
-
+function checkDatabaseStatus()
+{
     try {
-        $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+        $host = getenv('MYSQL_HOST');
+        $port = getenv('MYSQL_PORT');
+        $db   = getenv('MYSQL_DB');
+        $user = getenv('MYSQL_USER');
+        $pass = getenv('MYSQL_PASSWORD');
+
+        $dsn = "mysql:host=$host;port=$port;dbname=$db";
+        $pdo = new PDO($dsn, $user, $pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
+
         // Get MySQL version
         $stmt = $pdo->query("SELECT VERSION() AS version");
         $version = $stmt->fetch(PDO::FETCH_ASSOC)['version'];
-        
+
         echo json_encode([
             'success' => true,
             'version' => $version,
-            'message' => 'Database connection successful'
+            'message' => 'Database connection successful',
+            'config' => [
+                'host' => $host,
+                'port' => $port,
+                'database' => $db,
+                'user' => $user
+            ]
         ]);
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'error' => $e->getMessage()
+            'error' => $e->getMessage(),
+            'config' => [
+                'host' => $host,
+                'port' => $port,
+                'database' => $db,
+                'user' => $user
+            ]
         ]);
     }
 }

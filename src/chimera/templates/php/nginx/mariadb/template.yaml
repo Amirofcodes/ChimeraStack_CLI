@@ -4,23 +4,25 @@ description: "PHP development environment with Nginx web server and MariaDB data
 version: "1.0"
 author: "ChimeraStack"
 
-# Networking configuration
-network:
-  subnet: "172.20.0.0/16"
-  ports:
-    nginx: "8093"
-    phpmyadmin: "8092"
-    mariadb: "3307"
+services:
+  nginx:
+    port_type: backend
+    service_variant: php-nginx
+    default_port: 8093
+  phpmyadmin:
+    port_type: admin
+    service_variant: phpmyadmin
+    default_port: 8092
+  mariadb:
+    port_type: database
+    service_variant: mariadb
+    default_port: 3307
 
-# Environment variables template
 env_template: ".env.example"
 env_variables:
   PROJECT_NAME:
-    description: "Name of the project (will be used for container naming and networking)"
-    default: "php-app"
-    regex: "^[a-zA-Z][a-zA-Z0-9_-]*$"
-  
-  # Database configurations
+    description: "Project name"
+    default: "${PROJECT_NAME}"
   DB_DATABASE:
     description: "Database name"
     default: "${PROJECT_NAME}"
@@ -33,3 +35,7 @@ env_variables:
   DB_ROOT_PASSWORD:
     description: "Database root password"
     default: "rootsecret"
+
+network:
+  name: "${PROJECT_NAME}_network"
+  driver: bridge

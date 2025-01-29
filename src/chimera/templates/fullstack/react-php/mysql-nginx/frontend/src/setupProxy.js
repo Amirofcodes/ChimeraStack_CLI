@@ -1,12 +1,12 @@
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createProxyMiddleware } = require("http-proxy-middleware");
 
-module.exports = function(app) {
+module.exports = function (app) {
   app.use(
-    '/api',
+    "/api",
     createProxyMiddleware({
-      target: 'http://backend',
+      target: process.env.REACT_APP_BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT}`,
       pathRewrite: {
-        '^/api': '/api'
+        "^/api": "/api",
       },
       changeOrigin: true,
     })
