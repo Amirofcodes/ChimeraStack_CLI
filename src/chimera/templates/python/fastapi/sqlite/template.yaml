@@ -1,0 +1,24 @@
+name: "FastAPI/SQLite Stack"
+type: "Python Development"
+description: "FastAPI development environment with SQLite database, suitable for rapid prototyping and simple applications"
+version: "1.0"
+author: "ChimeraStack"
+tags: ["python", "fastapi", "sqlite", "async"]
+
+services:
+  backend:
+    port_type: backend
+    service_variant: fastapi
+
+env_template: ".env.example"
+env_variables:
+  PROJECT_NAME:
+    description: "Name of the project"
+    default: "${PROJECT_NAME}"
+  BACKEND_PORT:
+    description: "FastAPI backend port"
+    default: "8000"
+
+network:
+  name: "${PROJECT_NAME}_network"
+  driver: bridge

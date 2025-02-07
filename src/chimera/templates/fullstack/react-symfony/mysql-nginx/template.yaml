@@ -1,0 +1,45 @@
+name: "React/Symfony/MySQL Stack"
+type: "Fullstack Development"
+description: "Modern fullstack development environment with React, Symfony 6.4, and MySQL"
+version: "1.0"
+author: "ChimeraStack"
+tags: ["react", "symfony", "mysql", "typescript", "api-platform"]
+
+services:
+  frontend:
+    port_type: frontend
+    service_variant: react
+    default_port: 3000
+  backend:
+    port_type: backend
+    service_variant: symfony
+    default_port: 8000
+  mysql:
+    port_type: database
+    service_variant: mysql
+    default_port: 3306
+  adminer:
+    port_type: admin
+    service_variant: adminer
+    default_port: 8080
+
+env_template: ".env.example"
+env_variables:
+  PROJECT_NAME:
+    description: "Project name"
+    default: "${PROJECT_NAME}"
+  DB_DATABASE:
+    description: "Database name"
+    default: "${PROJECT_NAME}"
+  DB_USER:
+    description: "Database user"
+    default: "${PROJECT_NAME}"
+  DB_PASSWORD:
+    description: "Database password"
+    default: "secret"
+  DB_ROOT_PASSWORD:
+    description: "Database root password"
+    default: "rootsecret"
+  APP_SECRET:
+    description: "Symfony application secret"
+    default: "${PROJECT_NAME}_secret"

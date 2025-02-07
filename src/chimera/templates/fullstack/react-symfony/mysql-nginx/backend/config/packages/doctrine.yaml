@@ -1,0 +1,31 @@
+doctrine:
+  dbal:
+    url: "%env(resolve:DATABASE_URL)%"
+  orm:
+    auto_generate_proxy_classes: true
+    enable_lazy_ghost_objects: true
+    report_fields_where_declared: true
+    validate_xml_mapping: true
+    naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+    auto_mapping: true
+    mappings:
+      App:
+        is_bundle: false
+        dir: "%kernel.project_dir%/src/Entity"
+        prefix: 'App\Entity'
+        alias: App
+
+# backend/config/packages/nelmio_cors.yaml
+nelmio_cors:
+  defaults:
+    origin_regex: true
+    allow_origin: ["%env(CORS_ALLOW_ORIGIN)%"]
+    allow_methods: ["GET", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"]
+    allow_headers: ["Content-Type", "Authorization", "Preload", "Fields"]
+    expose_headers: ["Link"]
+    max_age: 3600
+  paths:
+    "^/api/":
+      allow_origin: ["*"]
+      allow_headers: ["*"]
+      allow_methods: ["POST", "PUT", "GET", "DELETE", "OPTIONS"]

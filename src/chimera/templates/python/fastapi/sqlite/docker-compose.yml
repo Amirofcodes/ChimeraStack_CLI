@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile
+    volumes:
+      - ./backend:/app
+      - sqlite_data:/app/data
+    ports:
+      - "${BACKEND_PORT}:8000"
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - DATABASE_URL=sqlite+aiosqlite:///./data/app.db
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    name: ${PROJECT_NAME}_network
+    driver: bridge
+
+volumes:
+  sqlite_data:
+    name: ${PROJECT_NAME}_sqlite_data

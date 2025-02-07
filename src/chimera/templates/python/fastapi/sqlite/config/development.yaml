@@ -1,0 +1,16 @@
+project:
+  name: ${PROJECT_NAME}
+  language: python
+  framework: fastapi
+  environment: development
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - ${BACKEND_PORT}:8000
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - ENVIRONMENT=development
