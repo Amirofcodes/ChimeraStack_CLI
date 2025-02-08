@@ -1,10 +1,10 @@
-# docker/php/Dockerfile
-
 FROM php:8.3-fpm-alpine AS app
 
-# Install system dependencies
 RUN apk add --no-cache \
     acl \
+    autoconf \
+    build-base \
+    linux-headers \
     fcgi \
     file \
     gettext \
@@ -14,57 +14,42 @@ RUN apk add --no-cache \
     icu-dev \
     libzip-dev \
     nodejs \
-    npm
+    npm \
+    $PHPIZE_DEPS
 
-# Install PHP extensions
-RUN set -eux; \
-    docker-php-ext-configure zip; \
-    docker-php-ext-install -j$(nproc) \
+RUN docker-php-ext-configure zip \
+    && docker-php-ext-install -j$(nproc) \
     intl \
     zip \
     pdo_mysql \
-    ; \
-    pecl install \
+    && pecl install \
     apcu \
     xdebug \
-    ; \
-    pecl clear-cache; \
-    docker-php-ext-enable \
+    && pecl clear-cache \
+    && docker-php-ext-enable \
     apcu \
-    opcache \
-    ;
+    opcache
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install Symfony CLI
-RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.alpine.sh' | bash \
-    && apk add symfony-cli
+# Create required directories
+RUN mkdir -p \
+    var/cache \
+    var/log \
+    var/sessions \
+    /var/log/php \
+    && chmod -R 777 var
 
 WORKDIR /var/www/html
 
-# Copy PHP configurations
-COPY ../docker/php/php.ini /usr/local/etc/php/conf.d/
-COPY ../docker/php/www.conf /usr/local/etc/php-fpm.d/
+COPY php.ini /usr/local/etc/php/conf.d/
+COPY www.conf /usr/local/etc/php-fpm.d/
 
-# Development stage
+COPY docker-healthcheck.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-healthcheck.sh
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD ["docker-healthcheck.sh"]
+
 FROM app AS app_dev
-
 ENV APP_ENV=dev
 RUN docker-php-ext-enable xdebug
-
-# Production stage
-FROM app AS app_prod
-
-ENV APP_ENV=prod
-
-# Copy application files
-COPY . .
-RUN set -eux; \
-    mkdir -p var/cache var/log; \
-    composer install --prefer-dist --no-dev --no-progress --no-scripts --no-interaction; \
-    composer dump-autoload --classmap-authoritative --no-dev; \
-    composer symfony:dump-env prod; \
-    composer run-script --no-dev post-install-cmd; \
-    chmod +x bin/console; sync; \
-    chown -R www-data:www-data var

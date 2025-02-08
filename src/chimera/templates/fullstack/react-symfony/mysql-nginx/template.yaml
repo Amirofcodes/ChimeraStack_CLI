@@ -28,18 +28,18 @@ env_variables:
   PROJECT_NAME:
     description: "Project name"
     default: "${PROJECT_NAME}"
-  DB_DATABASE:
+  MYSQL_DATABASE:
     description: "Database name"
     default: "${PROJECT_NAME}"
-  DB_USER:
+  MYSQL_USER:
     description: "Database user"
-    default: "${PROJECT_NAME}"
-  DB_PASSWORD:
+    default: "dev"
+  MYSQL_PASSWORD:
     description: "Database password"
     default: "secret"
-  DB_ROOT_PASSWORD:
+  MYSQL_ROOT_PASSWORD:
     description: "Database root password"
     default: "rootsecret"
   APP_SECRET:
     description: "Symfony application secret"
-    default: "${PROJECT_NAME}_secret"
+    default: "0123456789abcdef0123456789abcdef"

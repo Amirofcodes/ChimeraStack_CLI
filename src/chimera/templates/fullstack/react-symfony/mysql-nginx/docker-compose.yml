@@ -10,6 +10,10 @@ services:
       - /app/node_modules
     environment:
       - VITE_API_URL=http://localhost:${BACKEND_PORT}
+      - VITE_FRONTEND_PORT=${FRONTEND_PORT}
+      - VITE_BACKEND_PORT=${BACKEND_PORT}
+      - VITE_MYSQL_PORT=${MYSQL_PORT}
+      - VITE_ADMINER_PORT=${ADMINER_PORT}
     networks:
       - app_network
     healthcheck:
@@ -20,8 +24,7 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: docker/php/Dockerfile
+      context: ./docker/php
       target: app_dev
     volumes:
       - ./backend:/var/www/html:rw,cached
@@ -29,7 +32,7 @@ services:
     environment:
       - APP_ENV=dev
       - APP_SECRET=${APP_SECRET}
-      - DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@mysql:3306/${DB_DATABASE}?serverVersion=8.0
+      - DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}?serverVersion=8.0
     networks:
       - app_network
     healthcheck:
@@ -44,7 +47,7 @@ services:
       - "${BACKEND_PORT}:80"
     volumes:
       - ./backend:/var/www/html:ro
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:rw
     depends_on:
       - backend
     networks:
@@ -60,12 +63,13 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
     networks:
       - app_network
     healthcheck:
@@ -80,8 +84,8 @@ services:
       - "${ADMINER_PORT}:8080"
     environment:
       - PMA_HOST=mysql
-      - PMA_USER=${DB_USER}
-      - PMA_PASSWORD=${DB_PASSWORD}
+      - PMA_USER=${MYSQL_USER}
+      - PMA_PASSWORD=${MYSQL_PASSWORD}
     networks:
       - app_network
     healthcheck:
