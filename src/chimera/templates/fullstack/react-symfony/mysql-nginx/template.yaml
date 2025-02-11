@@ -27,19 +27,19 @@ env_template: ".env.example"
 env_variables:
   PROJECT_NAME:
     description: "Project name"
-    default: "${PROJECT_NAME}"
+    required: true
   MYSQL_DATABASE:
     description: "Database name"
-    default: "${PROJECT_NAME}"
+    value: "${PROJECT_NAME}"
   MYSQL_USER:
     description: "Database user"
-    default: "dev"
+    value: "dev"
   MYSQL_PASSWORD:
     description: "Database password"
-    default: "secret"
+    value: "secret"
   MYSQL_ROOT_PASSWORD:
     description: "Database root password"
-    default: "rootsecret"
+    value: "rootsecret"
   APP_SECRET:
     description: "Symfony application secret"
-    default: "0123456789abcdef0123456789abcdef"
+    value: "cc1a6fc4d1f5e98d5f1aa39de34a2af7"
