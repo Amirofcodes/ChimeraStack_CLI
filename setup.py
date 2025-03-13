@@ -1,10 +1,14 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
-    name="chimera-cli",
+    name="chimera-stack-cli",
     version="0.1.0",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    include_package_data=True,
     install_requires=[
         "click>=8.0.0",
         "python-dotenv>=0.19.0",
@@ -23,9 +27,14 @@ setup(
     author="Amir",
     author_email="amirofcodes@github.com",
     description="A template-based development environment manager",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Amirofcodes/ChimeraStack_CLI",
+    project_urls={
+        "Bug Tracker": "https://github.com/Amirofcodes/ChimeraStack_CLI/issues",
+        "Documentation": "https://github.com/Amirofcodes/ChimeraStack_CLI#readme",
+        "Source Code": "https://github.com/Amirofcodes/ChimeraStack_CLI",
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
