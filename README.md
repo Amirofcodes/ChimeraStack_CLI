@@ -2,6 +2,12 @@
 
 A powerful, template-based development environment manager that simplifies the setup of Docker-based development environments using dynamic port allocation.
 
+## Prerequisites
+
+- Python 3.8 or higher
+- Docker and Docker Compose (must be running)
+- pip (Python package manager)
+
 ## Features
 
 ✨ **Ready-to-Use Templates**
@@ -39,34 +45,43 @@ A powerful, template-based development environment manager that simplifies the s
 
 ### Installation
 
+#### Install and run Docker
 ```bash
-pip install chimera-cli
+# macOS and Windows
+# Download and install Docker Desktop from https://www.docker.com/products/docker-desktop/
+
+# Start Docker Desktop from your applications menu
+
+# Ubuntu
+sudo apt update
+sudo apt install docker.io docker-compose
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER  # Log out and back in after this
+```
+
+#### Install ChimeraStack CLI
+```bash
+pip install chimera-stack-cli
 ```
 
 ### Create a Project
-
 1. Create a new project:
-
 ```bash
 chimera create my-project
 ```
-
 2. Choose your template using the interactive arrow-key menu:
-
 ```
 ? Choose a category:
 ❯ PHP Development
-  Fullstack Development
-
+ Fullstack Development
 ? Choose a template:
 ❯ php/nginx/mysql - PHP development environment with Nginx web server and MySQL database
-  php/nginx/postgresql - PHP development environment with Nginx web server and PostgreSQL database
-  php/nginx/mariadb - PHP development environment with Nginx web server and MariaDB database
-  fullstack/react-php/mysql-nginx - Complete fullstack development environment with React, PHP backend, and MySQL database
+ php/nginx/postgresql - PHP development environment with Nginx web server and PostgreSQL database
+ php/nginx/mariadb - PHP development environment with Nginx web server and MariaDB database
+ fullstack/react-php/mysql-nginx - Complete fullstack development environment with React, PHP backend, and MySQL database
 ```
-
 3. Navigate to your project and start:
-
 ```bash
 cd my-project
 docker-compose up -d
@@ -135,3 +150,4 @@ For issues, feature requests, or questions:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
