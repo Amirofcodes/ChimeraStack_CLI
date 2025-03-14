@@ -61,8 +61,25 @@ sudo usermod -aG docker $USER  # Log out and back in after this
 ```
 
 #### Install ChimeraStack CLI
+### Option 1: Using pip
 ```bash
 pip install chimera-stack-cli
+```
+### Option 2: Pre-built binaries
+Download the appropriate binary for your platform from [GitHub Releases](https://github.com/Amirofcodes/ChimeraStack_CLI/releases)
+
+#### Linux
+```bash
+wget https://github.com/Amirofcodes/ChimeraStack_CLI/releases/download/v0.1.0/chimera-stack-cli-linux-x64
+chmod +x chimera-stack-cli-linux-x64
+sudo mv chimera-stack-cli-linux-x64 /usr/local/bin/chimera
+```
+
+#### macOS
+```bash
+curl -L https://github.com/Amirofcodes/ChimeraStack_CLI/releases/download/v0.1.0/chimera-stack-cli-macos -o chimera
+chmod +x chimera
+sudo mv chimera /usr/local/bin/
 ```
 
 ### Create a Project
