@@ -1,153 +1,162 @@
 # ChimeraStack CLI
 
-A powerful, template-based development environment manager that simplifies the setup of Docker-based development environments using dynamic port allocation.
+ChimeraStack CLI is a powerful, template-based development environment manager that simplifies the creation of Docker-based development stacks with dynamic port allocation, zero config, and cross-platform support.
 
-## Prerequisites
+---
 
-- Python 3.8 or higher
-- Docker and Docker Compose (must be running)
-- pip (Python package manager)
+## 🚀 Why ChimeraStack?
 
-## Features
+Whether you're building APIs, fullstack apps, or just want a production-ready local dev environment, ChimeraStack gives you:
 
-✨ **Ready-to-Use Templates**
+- ✅ Smart dynamic port allocation (run many projects at once)
+- ✅ Fully containerized
+- ✅ Ready-to-use templates: React, PHP, MySQL, PostgreSQL, and more comming
+- ✅ CLI simplicity + growing web integration
+- ✅ Plugin-ready, modular architecture (coming soon)
 
-- **PHP/Nginx Stacks**
+---
+
+## 🧩 Project Structure
+
+ChimeraStack CLI is part of the **ChimeraStack ecosystem**, which includes:
+
+- **CLI Tool**: Generate, run, and extend dev environments from your terminal
+- **Web Platform**: [chimerastack.com](https://www.chimerastack.com)
+  - Browse templates
+  - Download CLI
+  - Manage downloads
+  - Support the project
+
+---
+
+## 🛠️ Prerequisites
+
+- Python 3.8+
+- Docker and Docker Compose installed and running
+- `pip` (Python package manager)
+
+---
+
+## ✨ Features
+
+### ✅ Template-Based Environment Creation
+
+- Create projects from pre-defined, production-ready stacks
+
+### 🔄 Dynamic Port Allocation
+
+- Avoid port conflicts by auto-assigning based on service type:
+  - Frontend (React): `3000–3999`
+  - Backend (PHP/Node): `8000–8999`
+  - MySQL: `3300–3399`
+  - PostgreSQL: `5432–5632`
+  - MariaDB: `3400–3499`
+  - Admin tools: `8081+`
+
+### 📦 Available Stacks (v0.1.0)
+
+- PHP/Nginx with:
   - MySQL
   - PostgreSQL
   - MariaDB
-- **Fullstack Environments**
-  - React + PHP + MySQL
+- React + PHP Fullstack (with MySQL)
 
-🔄 **Dynamic Port Allocation**
+---
 
-- Automatic port assignment to avoid conflicts
-- Run multiple projects simultaneously
-- Smart port range management:
-  - Frontend (React): 3000-3999
-  - Backend (PHP/Node): 8000-8999
-  - Databases:
-    - MySQL: 3300-3399
-    - MariaDB: 3400-3499
-    - PostgreSQL: 5432-5632
-  - Admin Tools:
-    - phpMyAdmin: 8081-8180
-    - pgAdmin: 8181-8280
+## ⚡ Quick Start
 
-🚀 **Coming Soon**
+### Install ChimeraStack CLI
 
-- Python development environments
-- Node.js stacks
-- More frontend frameworks
-- Additional database options
+#### Option 1: PyPI (Recommended)
 
-## Quick Start
-
-### Installation
-
-#### Install and run Docker
-```bash
-# macOS and Windows
-# Download and install Docker Desktop from https://www.docker.com/products/docker-desktop/
-
-# Start Docker Desktop from your applications menu
-
-# Ubuntu
-sudo apt update
-sudo apt install docker.io docker-compose
-sudo systemctl start docker
-sudo systemctl enable docker
-sudo usermod -aG docker $USER  # Log out and back in after this
-```
-
-#### Install ChimeraStack CLI
 ```bash
 pip install chimera-stack-cli
 ```
 
+#### Option 2: Prebuilt Binaries
+
+Download for [Linux/macOS](https://www.chimerastack.com/download), then:
+
+```bash
+chmod +x chimera-stack-cli-*
+./chimera-stack-cli-macos
+```
+
+---
+
 ### Create a Project
-1. Create a new project:
+
 ```bash
 chimera create my-project
 ```
-2. Choose your template using the interactive arrow-key menu:
+
+You'll be prompted to choose:
+
 ```
 ? Choose a category:
-❯ PHP Development
- Fullstack Development
+❯ Backend
+  Frontend
+  Fullstack
 ? Choose a template:
-❯ php/nginx/mysql - PHP development environment with Nginx web server and MySQL database
- php/nginx/postgresql - PHP development environment with Nginx web server and PostgreSQL database
- php/nginx/mariadb - PHP development environment with Nginx web server and MariaDB database
- fullstack/react-php/mysql-nginx - Complete fullstack development environment with React, PHP backend, and MySQL database
+❯ backend/php/mysql
+  fullstack/react-php/mysql
 ```
-3. Navigate to your project and start:
+
+Then:
+
 ```bash
 cd my-project
 docker-compose up -d
 ```
 
-## Templates
+Done. Your services are up and running on dynamic, non-conflicting ports.
 
-### PHP Development
+---
 
-#### PHP/Nginx/MySQL Stack
+## 🔮 Roadmap
 
-- Web server (Nginx + PHP-FPM)
-- MySQL Database
-- phpMyAdmin
-- Pre-configured for PHP development
+| Version  | Milestone                                                             |
+| -------- | --------------------------------------------------------------------- |
+| `v0.2.0` | Template refactor: `frontend/`, `backend/`, `fullstack/`              |
+| `v0.3.0` | Plugin support: `chimera add monitoring`, logging, Redis, etc.        |
+| `v0.4.0` | Mix & Match: `chimera init --frontend react --backend php --db mysql` |
+| `v0.5.0` | Deploy to Coolify or Docker VPS (`chimera deploy`)                    |
+| `v1.0.0` | Stable release with web CLI sync, versioning, and DevOps tools        |
 
-#### PHP/Nginx/PostgreSQL Stack
+---
 
-- Web server (Nginx + PHP-FPM)
-- PostgreSQL Database
-- pgAdmin
-- Pre-configured for PHP development
+## 💡 Coming Soon
 
-#### PHP/Nginx/MariaDB Stack
+- Node.js backend templates
+- Python (Flask/FastAPI) templates
+- Vue/Svelte frontend stacks
+- Redis & RabbitMQ plugin support
+- `chimera deploy` (Coolify, Docker VPS)
 
-- Web server (Nginx + PHP-FPM)
-- MariaDB Database
-- phpMyAdmin
-- Pre-configured for PHP development
+---
 
-### Fullstack Development
+## 🤝 Contributing
 
-#### React/PHP/MySQL Stack
+Want to contribute a template or core feature?
 
-- React Frontend with hot reload
-- PHP Backend (Nginx + PHP-FPM)
-- MySQL Database
-- phpMyAdmin
-- Pre-configured API connectivity
+- Fork the repo
+- Follow the [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Use semantic commits (`feat:`, `fix:`, `chore:`)
+- Submit a PR
 
-## Key Benefits
+---
 
-- 🎯 **Zero Configuration**: Pre-configured development environments that work out of the box
-- 🔄 **Dynamic Ports**: Smart port allocation to avoid conflicts between projects
-- 🔌 **Project Isolation**: Run multiple projects simultaneously
-- 🛠️ **Development Ready**: Hot-reload, debugging tools, and development utilities included
-- 🔒 **Secure Defaults**: Security best practices configured by default
-- 🔄 **Consistent Environments**: Ensure your team uses the same development setup
+## 🧑‍💻 Support & Community
 
-## Status
+- 🌍 [ChimeraStack Web Platform](https://www.chimerastack.com)
+- 🐙 [GitHub Issues](https://github.com/Amirofcodes/ChimeraStack_CLI/issues)
+- 🛠️ Docs, changelog, and CLI binaries
+- 💬 Feature requests always welcome
 
-ChimeraStack CLI is under active development. We're continuously adding new templates and features to support more development scenarios.
+---
 
-## Contributing
+## 📄 License
 
-We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+MIT License — [LICENSE](LICENSE)
 
-## Support
-
-For issues, feature requests, or questions:
-
-- Create an issue on GitHub
-- Check our documentation
-- Join our community discussions
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
+---
