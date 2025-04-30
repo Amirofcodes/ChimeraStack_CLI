@@ -85,7 +85,7 @@ compose:
   base: "docker-compose.base.yml" # Contains welcome + php-fpm setup
   variants:
     mysql: "docker-compose.mysql.yml"
-    postgresql: "docker-compose.pgsql.yml"
+    postgresql: "docker-compose.postgresql.yml"
     mariadb: "docker-compose.mariadb.yml"
 
 # Files to be generated/processed
