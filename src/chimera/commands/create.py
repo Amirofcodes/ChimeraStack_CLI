@@ -9,10 +9,10 @@ from chimera.core import TemplateManager
 console = Console()
 
 
-def create_command(name: str, template: str | None = None) -> None:
+def create_command(name: str, template: str | None = None, verbose: bool = False) -> None:
     """Create a new project from a template."""
     try:
-        template_manager = TemplateManager()
+        template_manager = TemplateManager(verbose=verbose)
         variant = None
 
         if not template:

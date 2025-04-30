@@ -16,12 +16,19 @@ console = Console()
 class TemplateManager:
     VALID_CATEGORIES = ['frontend', 'backend', 'fullstack']
 
-    def __init__(self, templates_dir: Path | str = None):
+    def __init__(self, templates_dir: Path | str = None, verbose: bool = False):
         if templates_dir is None:
             templates_dir = Path(__file__).parent.parent / 'templates'
         self.templates_dir = Path(templates_dir)
         self.port_allocator = PortAllocator()
         self.port_scanner = PortScanner()
+        self.verbose = verbose  # Control output verbosity
+
+    # Helper method to print only when verbose is enabled
+    def _verbose_print(self, message: str) -> None:
+        """Print message only when verbose mode is enabled."""
+        if self.verbose:
+            console.print(message)
 
     def get_available_templates(self) -> List[Dict[str, str]]:
         """Get list of available templates with metadata."""
@@ -287,6 +294,10 @@ class TemplateManager:
             # Display allocated ports
             self._print_port_mappings(port_mappings)
 
+            # Show next steps guidance
+            self._print_next_steps(
+                target_dir, template_id, variant, port_mappings)
+
             return True
 
         except Exception as e:
@@ -369,7 +380,7 @@ class TemplateManager:
                                     with open(target_conf, 'w') as f:
                                         f.write(conf_content)
 
-                                    console.print(
+                                    self._verbose_print(
                                         f"[green]✓[/] Configured Nginx: {conf_file.name}")
                             else:
                                 # Copy all files in subdirectory normally
@@ -381,7 +392,7 @@ class TemplateManager:
                                             parents=True, exist_ok=True)
                                         shutil.copy2(file, dest_file)
 
-                    console.print(
+                    self._verbose_print(
                         f"[green]✓[/] Copied docker configuration from {component_name} component")
 
                 # Copy src directory if it exists
@@ -398,7 +409,7 @@ class TemplateManager:
                             dest_file = target_src_dir / rel_path
                             dest_file.parent.mkdir(parents=True, exist_ok=True)
                             shutil.copy2(file, dest_file)
-                            console.print(
+                            self._verbose_print(
                                 f"[green]✓[/] Copied src file: {rel_path}")
 
                 # Copy www directory if it exists
@@ -416,7 +427,7 @@ class TemplateManager:
                             dest_file.parent.mkdir(parents=True, exist_ok=True)
                             shutil.copy2(file, dest_file)
 
-                    console.print(
+                    self._verbose_print(
                         f"[green]✓[/] Copied www files from {component_name} component")
 
     def _replace_path_variables(self, path: str, variables: dict) -> str:
@@ -458,7 +469,7 @@ class TemplateManager:
                 # Process the copied file
                 self._process_yaml_file(project_dir.joinpath(
                     'docker-compose.yml'), variables, is_compose=True)
-                console.print(
+                self._verbose_print(
                     "[green]✓[/] Created docker-compose.yml from base template")
 
             # Look for variant-specific compose file
@@ -471,15 +482,10 @@ class TemplateManager:
                     # Process the copied file
                     self._process_yaml_file(project_dir.joinpath(
                         'docker-compose.yml'), variables, is_compose=True)
-                    console.print(
+                    self._verbose_print(
                         f"[green]✓[/] Created docker-compose.yml from {variant} template")
 
-        # Process development.yaml
-        dev_config = project_dir / 'config/development.yaml'
-        if dev_config.exists():
-            self._process_yaml_file(dev_config, variables)
-
-        # Create public directory if it doesn't exist with proper router
+        # Create public directory with proper router
         public_dir = project_dir / 'public'
         public_dir.mkdir(parents=True, exist_ok=True)
 
@@ -488,7 +494,7 @@ class TemplateManager:
         if www_index.exists():
             # Copy the original routing logic to public/index.php
             shutil.copy2(www_index, public_dir / 'index.php')
-            console.print(
+            self._verbose_print(
                 "[green]✓[/] Copied routing logic to public/index.php")
         else:
             # Create an index.php file with proper routing
@@ -532,31 +538,277 @@ switch ($uri) {
             with open(public_dir / 'index.php', 'w') as f:
                 f.write(index_content)
 
-            console.print(
+            self._verbose_print(
                 "[green]✓[/] Created public/index.php with routing logic")
 
-        # Also fix any Nginx configuration to ensure proper document root
+        # Fix Nginx configuration to ensure proper document root
         nginx_conf = project_dir / 'docker/nginx/conf.d/default.conf'
         if nginx_conf.exists():
             try:
                 with open(nginx_conf, 'r') as f:
                     conf_content = f.read()
 
-                # Make sure root is set correctly - could point to public or src/pages
-                if 'root /var/www/html/public;' in conf_content and not (project_dir / 'public').exists():
-                    # Update Nginx config to point to correct directory
+                # Make sure root is set correctly - should always point to public
+                if not 'root /var/www/html/public;' in conf_content:
+                    # Update Nginx config to point to the public directory
                     conf_content = conf_content.replace(
-                        'root /var/www/html/public;',
-                        'root /var/www/html;'
+                        'root /var/www/html;',
+                        'root /var/www/html/public;'
                     )
 
                     with open(nginx_conf, 'w') as f:
                         f.write(conf_content)
 
-                    console.print("[green]✓[/] Updated Nginx configuration")
+                    self._verbose_print(
+                        "[green]✓[/] Updated Nginx configuration")
             except Exception as e:
                 console.print(
                     f"[yellow]Warning: Could not update Nginx configuration: {str(e)}[/]")
+
+        # Clean up redundant files and directories
+        self._cleanup_project_structure(project_dir)
+
+    def _cleanup_project_structure(self, project_dir: Path) -> None:
+        """Remove redundant files and directories to create a cleaner project structure."""
+        try:
+            # Get the DB_ENGINE from the .env file if it exists
+            db_engine = None
+            env_path = project_dir / '.env'
+            if env_path.exists():
+                try:
+                    with open(env_path, 'r') as f:
+                        for line in f:
+                            if line.startswith('DB_ENGINE='):
+                                db_engine = line.strip().split('=', 1)[1]
+                                break
+                except Exception:
+                    pass
+
+            # Remove redundant files
+            redundant_files = [
+                'docker-compose.base.yml',  # Keep only the main docker-compose.yml
+            ]
+
+            # Also remove any variant-specific docker-compose files that aren't our current variant
+            if db_engine:
+                for variant in ['mysql', 'postgresql', 'mariadb']:
+                    if variant != db_engine:
+                        redundant_files.append(f"docker-compose.{variant}.yml")
+
+            # Handle the case where we have a docker-compose.yml that wasn't properly updated
+            # This can happen when the variant-specific docker-compose wasn't properly copied
+            if db_engine and db_engine != 'mysql':
+                variant_compose = project_dir / \
+                    f"docker-compose.{db_engine}.yml"
+                main_compose = project_dir / "docker-compose.yml"
+
+                if variant_compose.exists() and main_compose.exists():
+                    # Check if we're using the wrong database in docker-compose.yml
+                    with open(main_compose, 'r') as f:
+                        compose_content = f.read()
+
+                    # If the docker-compose.yml is still using mysql instead of our variant
+                    if f"image: mysql:" in compose_content and db_engine != 'mysql':
+                        console.print(
+                            f"[yellow]Warning:[/] docker-compose.yml still using MySQL. Replacing with {db_engine} version.")
+
+                        # Replace with the correct variant file
+                        shutil.copy2(variant_compose, main_compose)
+
+                        # Process the new file to ensure variables are properly substituted
+                        from pathlib import Path
+                        env_vars = {}
+                        if env_path.exists():
+                            with open(env_path, 'r') as f:
+                                for line in f:
+                                    if '=' in line and not line.startswith('#'):
+                                        key, value = line.strip().split('=', 1)
+                                        env_vars[key] = value
+
+                        self._process_yaml_file(
+                            main_compose, env_vars, is_compose=True)
+                        console.print(
+                            f"[green]✓[/] Updated docker-compose.yml to use {db_engine}")
+
+            for file in redundant_files:
+                file_path = project_dir / file
+                if file_path.exists():
+                    file_path.unlink()
+                    self._verbose_print(
+                        f"[green]✓[/] Removed redundant file: {file}")
+
+            # Remove redundant directories if they're empty
+            redundant_dirs = [
+                'config',  # Empty config directory not needed with .env file
+                'www',     # Consolidated to public directory
+            ]
+
+            # Remove mysql directory if using mariadb or postgresql
+            # and remove postgres directory if using mysql or mariadb
+            if db_engine == 'mariadb' or db_engine == 'postgresql':
+                if (project_dir / 'docker/mysql').exists():
+                    redundant_dirs.append('docker/mysql')
+
+            if db_engine == 'mysql' or db_engine == 'mariadb':
+                if (project_dir / 'docker/postgres').exists():
+                    redundant_dirs.append('docker/postgres')
+
+            if db_engine == 'mysql' or db_engine == 'postgresql':
+                if (project_dir / 'docker/mariadb').exists():
+                    redundant_dirs.append('docker/mariadb')
+
+            for directory in redundant_dirs:
+                dir_path = project_dir / directory
+                if dir_path.exists() and not any(dir_path.iterdir()):
+                    dir_path.rmdir()
+                    self._verbose_print(
+                        f"[green]✓[/] Removed empty directory: {directory}")
+                elif dir_path.exists() and directory == 'www':
+                    # If www exists and has content, we've already copied what we need
+                    # to public/, so it's safe to remove
+                    shutil.rmtree(dir_path)
+                    self._verbose_print(
+                        f"[green]✓[/] Removed redundant directory: {directory}")
+                elif dir_path.exists() and directory.startswith('docker/'):
+                    # Remove conflicting database directories
+                    shutil.rmtree(dir_path)
+                    self._verbose_print(
+                        f"[green]✓[/] Removed conflicting directory: {directory}")
+
+            # Create an informative README.md if it doesn't exist
+            readme_path = project_dir / 'README.md'
+            self._create_readme(project_dir, readme_path)
+
+        except Exception as e:
+            console.print(
+                f"[yellow]Warning: Could not clean up project structure: {str(e)}[/]")
+
+    def _create_readme(self, project_dir: Path, readme_path: Path) -> None:
+        """Create a README.md file with template-specific instructions."""
+
+        # Try to load port settings from .env file
+        env_path = project_dir / '.env'
+        env_vars = {}
+        if env_path.exists():
+            try:
+                with open(env_path, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#') and '=' in line:
+                            key, value = line.split('=', 1)
+                            env_vars[key.strip()] = value.strip()
+            except Exception:
+                pass
+
+        # Default port values if not found in .env
+        web_port = env_vars.get('WEB_PORT', env_vars.get('NGINX_PORT', '8000'))
+        db_port = env_vars.get('DB_PORT', '3306')
+        admin_port = env_vars.get('ADMIN_PORT', env_vars.get(
+            'PHPMYADMIN_PORT', env_vars.get('PGADMIN_PORT', '8080')))
+
+        # Determine template type based on directory structure
+        has_php = (project_dir / 'docker/php').exists()
+        has_mysql = (project_dir / 'docker/mysql').exists()
+        has_postgres = (project_dir / 'docker/postgres').exists()
+        has_mariadb = (project_dir / 'docker/mariadb').exists()
+
+        # Get project name
+        project_name = project_dir.name
+
+        # Define database type
+        db_type = "MySQL"
+        if has_mariadb:
+            db_type = "MariaDB"
+        elif has_postgres:
+            db_type = "PostgreSQL"
+
+        # Define admin tool
+        admin_tool = "phpMyAdmin"
+        if has_postgres:
+            admin_tool = "pgAdmin"
+
+        # For MariaDB, include special badge or logo
+        db_badge = ""
+        if has_mariadb:
+            db_badge = "\n[![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://mariadb.org/)"
+        elif has_postgres:
+            db_badge = "\n[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)"
+        elif has_mysql:
+            db_badge = "\n[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)"
+
+        # Build template-specific README content
+        content = f"""# {project_name}{db_badge}
+
+A PHP development environment with {db_type} database created with ChimeraStack CLI.
+
+## 🚀 Quick Start
+
+1. **Start the environment**:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Stop the environment**:
+   ```bash
+   docker-compose down
+   ```
+
+## 📋 Stack Components
+
+| Component | Description | Access |
+|-----------|-------------|--------|
+| Nginx | Web server | http://localhost:{web_port} |
+| PHP-FPM | PHP FastCGI Process Manager | N/A (Internal) |
+| {db_type} | Database server | localhost:{db_port} |
+| {admin_tool} | Database administration | http://localhost:{admin_port} |
+
+## 🔧 Project Structure
+
+- `docker/` - Docker configuration files
+  - `nginx/` - Nginx web server configuration
+  - `php/` - PHP-FPM configuration and Dockerfile
+  - `{'mariadb' if has_mariadb else 'mysql' if has_mysql else 'postgres'}/` - {db_type} database configuration
+- `public/` - Web server document root (place your public files here)
+- `src/` - Application source code (PHP classes and logic)
+  - `pages/` - PHP page templates
+  - `bootstrap.php` - Application initialization
+
+## 💻 Development Workflow
+
+1. **PHP Files**: Place all your PHP application files in the `src/` directory
+2. **Public Assets**: Place publicly accessible files (index.php, images, CSS, JS) in the `public/` directory
+
+## 📦 Database Access
+
+- **Host**: {('mariadb' if has_mariadb else 'mysql' if has_mysql else 'postgres').lower()}
+- **Database**: {project_name}
+- **Username**: {project_name}
+- **Password**: secret
+- **Root Password**: rootsecret
+
+You can connect to the database using {admin_tool} at http://localhost:{admin_port} or use any database client.
+
+## ⚙️ Configuration
+
+Environment variables are stored in the `.env` file. Edit this file to change:
+- Port mappings
+- Database credentials
+- PHP configuration
+
+## 🐞 Troubleshooting
+
+- **Container Issues**: Check container status with `docker-compose ps`
+- **Logs**: View container logs with `docker-compose logs [service]`
+- **PHP Configuration**: Modify PHP settings in `docker/php/php.ini`
+- **Web Server Issues**: Check Nginx configuration in `docker/nginx/conf.d/default.conf`
+"""
+
+        # Write the README file
+        with open(readme_path, 'w') as f:
+            f.write(content)
+
+        self._verbose_print(
+            f"[green]✓[/] Created detailed README.md with helpful information")
 
     def _create_default_env_file(self, project_dir: Path, variables: dict) -> None:
         """Create a default .env file with essential variables when none exists in the template."""
@@ -577,7 +829,8 @@ PHP_DISPLAY_ERRORS=On
 PHP_ERROR_REPORTING=E_ALL
 
 # Database Configuration
-DB_HOST={db_engine}
+DB_HOST={db_engine if db_engine != 'mariadb' else 'mariadb'}
+# External port mapping - inside Docker, the internal port remains standard (3306 for MySQL/MariaDB, 5432 for PostgreSQL)
 DB_PORT={variables.get('DB_PORT', '3306')}
 DB_ENGINE={db_engine}
 DB_DATABASE={variables.get('DB_DATABASE', variables.get('PROJECT_NAME', 'chimera-project'))}
@@ -618,7 +871,7 @@ APP_DEBUG=true
         with open(env_path, 'w') as f:
             f.write(env_content)
 
-        console.print(
+        self._verbose_print(
             f"[green]✓[/] Created .env file with {db_engine} configuration")
 
     def _process_yaml_file(self, file_path: Path, variables: dict, is_compose: bool = False) -> None:
@@ -628,6 +881,50 @@ APP_DEBUG=true
 
             if is_compose:
                 project_name = variables['PROJECT_NAME']
+
+                # Handle DB_HOST specifically for MariaDB
+                if 'DB_ENGINE' in variables and variables['DB_ENGINE'] == 'mariadb':
+                    # Find services using DB_HOST env var
+                    for service_name, service in content.get('services', {}).items():
+                        if 'environment' in service and isinstance(service['environment'], dict):
+                            # If a service has DB_HOST env var, set it to 'mariadb'
+                            if 'DB_HOST' in service['environment']:
+                                service['environment']['DB_HOST'] = 'mariadb'
+                        elif 'environment' in service and isinstance(service['environment'], list):
+                            # For array-style environment variables
+                            for i, env_var in enumerate(service['environment']):
+                                if isinstance(env_var, str) and env_var.startswith('DB_HOST='):
+                                    service['environment'][i] = 'DB_HOST=mariadb'
+
+                # Ensure PHP service has DB environment variables
+                if 'services' in content and 'php' in content['services']:
+                    php_service = content['services']['php']
+                    # Create environment section if it doesn't exist
+                    if 'environment' not in php_service:
+                        php_service['environment'] = {}
+
+                    # If environment is a list, convert to dict for easier manipulation
+                    if isinstance(php_service['environment'], list):
+                        env_dict = {}
+                        for env_var in php_service['environment']:
+                            if isinstance(env_var, str) and '=' in env_var:
+                                key, value = env_var.split('=', 1)
+                                env_dict[key] = value
+                        php_service['environment'] = env_dict
+
+                    # Add database environment variables
+                    db_vars = {
+                        'DB_HOST': variables.get('DB_ENGINE', 'mysql') if variables.get('DB_ENGINE', 'mysql') != 'mariadb' else 'mariadb',
+                        'DB_PORT': '3306',  # Use internal container port
+                        'DB_DATABASE': variables.get('DB_DATABASE', project_name),
+                        'DB_USERNAME': variables.get('DB_USERNAME', project_name),
+                        'DB_PASSWORD': variables.get('DB_PASSWORD', 'secret'),
+                        'DB_ENGINE': variables.get('DB_ENGINE', 'mysql')
+                    }
+
+                    # Add or update environment variables
+                    for key, value in db_vars.items():
+                        php_service['environment'][key] = value
 
                 # Update services
                 for service_name, service in content.get('services', {}).items():
@@ -685,7 +982,7 @@ APP_DEBUG=true
             with open(file_path, 'w') as f:
                 f.write(content_str)
 
-            console.print(f"[green]✓[/] Processed: {file_path}")
+            self._verbose_print(f"[green]✓[/] Processed: {file_path}")
         except Exception as e:
             console.print(f"[red]Error processing {file_path}:[/] {str(e)}")
             raise
@@ -703,7 +1000,7 @@ APP_DEBUG=true
             with open(dest_path, 'w') as f:
                 f.write(content)
 
-            console.print(
+            self._verbose_print(
                 f"[green]✓[/] Environment file processed: {dest_path}")
         except Exception as e:
             console.print(
@@ -853,3 +1150,36 @@ APP_DEBUG=true
             return None
         except Exception:
             return None
+
+    def _print_next_steps(self, project_dir: Path, template_id: str, variant: str, port_mappings: Dict[str, int]) -> None:
+        """Display helpful next steps after project creation."""
+        relative_path = project_dir.relative_to(
+            Path.cwd()) if project_dir.is_relative_to(Path.cwd()) else project_dir
+
+        console.print("\n[bold green]✓ Project created successfully![/]")
+        console.print("\n[bold]Next steps:[/]")
+        console.print(f"  1. [yellow]cd[/] [cyan]{relative_path}[/]")
+        console.print(
+            f"  2. [yellow]docker-compose up -d[/] [dim](Start the development environment)[/]")
+
+        # Template-specific instructions based on template_id
+        if 'php' in template_id:
+            web_port = port_mappings.get('web', 8000)
+            admin_port = port_mappings.get('admin', 8080)
+
+            console.print("\n[bold]Access your development environment:[/]")
+            console.print(f"  • [cyan]Website:[/] http://localhost:{web_port}")
+
+            if 'mysql' in variant or 'mariadb' in variant:
+                console.print(
+                    f"  • [cyan]phpMyAdmin:[/] http://localhost:{admin_port}")
+            elif 'postgresql' in variant:
+                console.print(
+                    f"  • [cyan]pgAdmin:[/] http://localhost:{admin_port}")
+
+            console.print("\n[bold]Development:[/]")
+            console.print(
+                "  • Place your PHP files in the [cyan]src/[/] directory")
+            console.print(
+                "  • Web server is configured to serve from [cyan]public/[/] directory")
+            console.print("  • View the README.md file for more details")
