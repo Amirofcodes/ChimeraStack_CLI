@@ -1,6 +1,126 @@
 # ChimeraStack CLI
 
-ChimeraStack CLI is a powerful, template-based development environment manager that simplifies the creation of Docker-based development stacks with dynamic port allocation, zero config, and cross-platform support.
+A powerful development environment manager that helps you quickly set up and manage local development environments using pre-configured templates.
+
+## Features
+
+- 🚀 Zero-configuration development environments
+- 🔄 Dynamic port allocation
+- 📦 Pre-configured templates for various stacks
+- 🛠️ Customizable and extensible
+- 🔌 Plugin system (coming soon)
+
+## Installation
+
+```bash
+pip install chimera-cli
+```
+
+## Usage
+
+### Create a New Project
+
+```bash
+# Interactive mode
+chimera create my-project
+
+# Using a specific template
+chimera create my-project -t backend/php/nginx-mysql
+```
+
+### List Available Templates
+
+```bash
+# List all templates
+chimera list
+
+# Search templates
+chimera list -s mysql
+
+# List templates by category
+chimera list -c backend
+```
+
+## Template Categories
+
+Templates are organized into the following categories:
+
+### Frontend Templates
+
+- React applications
+- Vue.js applications
+- Angular applications
+- Static sites
+
+### Backend Templates
+
+- PHP/MySQL stacks
+- Python/PostgreSQL stacks
+- Node.js/MongoDB stacks
+- Ruby on Rails setups
+
+### Fullstack Templates
+
+- MERN stack (MongoDB, Express, React, Node.js)
+- LAMP stack (Linux, Apache, MySQL, PHP)
+- React + PHP + MySQL
+- Vue.js + Python + PostgreSQL
+
+## Template Structure
+
+Templates are organized in a hierarchical structure:
+
+```
+templates/
+├── base/
+│   ├── core/
+│   │   └── welcome/          # Common welcome page
+│   ├── backend/
+│   │   └── php/             # PHP-FPM configuration
+│   └── database/
+│       ├── mysql/           # MySQL configuration
+│       ├── postgresql/      # PostgreSQL configuration
+│       └── mariadb/         # MariaDB configuration
+└── stacks/
+    └── backend/
+        └── php-web/         # PHP web stack with DB choice
+            ├── docker-compose.base.yml
+            ├── docker-compose.mysql.yml
+            ├── docker-compose.postgresql.yml
+            └── docker-compose.mariadb.yml
+```
+
+### Template Configuration
+
+Each template must include a `template.yaml` file that defines its configuration. Here's an example:
+
+```yaml
+name: "PHP MySQL Development"
+version: "1.0.0"
+description: "PHP development environment with MySQL database"
+
+tags:
+  - php
+  - mysql
+  - development
+
+services:
+  web:
+    port_range: "8000-8999"
+  db:
+    port_range: "3306-3399"
+# See template.yaml.example for full configuration options
+```
+
+For a complete example of template configuration, see `templates/template.yaml.example`.
+
+## Contributing
+
+We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
