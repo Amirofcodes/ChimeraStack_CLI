@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # Frontend React development server
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}-frontend
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:${WEB_PORT}/api
+      - WDS_SOCKET_PORT=${FRONTEND_PORT}
+    networks:
+      - ${PROJECT_NAME}_network
+
+  # Backend PHP-FPM service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PHP_VERSION: "8.1"
+    container_name: ${PROJECT_NAME}-backend
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./backend/docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    environment:
+      - APP_ENV=local
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - ${PROJECT_NAME}_network
+
+  # Nginx web server
+  nginx:
+    image: nginx:alpine
+    container_name: ${PROJECT_NAME}-nginx
+    ports:
+      - "${WEB_PORT}:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - backend
+    networks:
+      - ${PROJECT_NAME}_network
+
+  # MySQL database
+  db:
+    image: mysql:8.0
+    container_name: ${PROJECT_NAME}-db
+    ports:
+      - "${DB_PORT}:3306"
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - ${PROJECT_NAME}_network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ${PROJECT_NAME}-phpmyadmin
+    ports:
+      - "${ADMIN_PORT}:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+    depends_on:
+      - db
+    networks:
+      - ${PROJECT_NAME}_network
+
+networks:
+  ${PROJECT_NAME}_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    name: ${PROJECT_NAME}_mysql 

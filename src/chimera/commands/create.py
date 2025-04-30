@@ -8,15 +8,17 @@ from chimera.core import TemplateManager
 
 console = Console()
 
+
 def create_command(name: str, template: str | None = None) -> None:
     """Create a new project from a template."""
     try:
         template_manager = TemplateManager()
-        
+        variant = None
+
         if not template:
             # Get all templates first
             templates_by_category = template_manager.get_templates_by_category()
-            
+
             # Step 1: Select category
             categories = list(templates_by_category.keys())
             category = questionary.select(
@@ -24,7 +26,7 @@ def create_command(name: str, template: str | None = None) -> None:
                 choices=categories,
                 use_indicator=True
             ).ask()
-            
+
             if not category:
                 console.print("[red]Category selection cancelled[/]")
                 return
@@ -38,26 +40,49 @@ def create_command(name: str, template: str | None = None) -> None:
                 }
                 for t in templates
             ]
-            
+
             selected = questionary.select(
                 "Choose a template:",
                 choices=choices,
                 use_indicator=True
             ).ask()
-            
+
             if not selected:
                 console.print("[red]Template selection cancelled[/]")
                 return
-                
+
             template = selected
+
+            # Step 3: Check for variants and select if available
+            template_info = next(
+                (t for t in templates if t['id'] == template), None)
+            if template_info and 'variants' in template_info and template_info['variants']:
+                variants = template_info['variants']
+                if len(variants) > 1:  # Only prompt if multiple variants exist
+                    variant = questionary.select(
+                        "Choose a variant:",
+                        choices=variants,
+                        use_indicator=True
+                    ).ask()
+
+                    if not variant:
+                        console.print("[red]Variant selection cancelled[/]")
+                        return
 
         # Create the project
         if template:
-            console.print(f"Creating project [bold blue]{name}[/] using template [bold green]{template}[/]")
-            template_manager.create_project(template, name)
+            if variant:
+                console.print(
+                    f"Creating project [bold blue]{name}[/] using template [bold green]{template}[/] with variant [bold cyan]{variant}[/]")
+                template_manager.create_project(
+                    template, name, variant=variant)
+            else:
+                console.print(
+                    f"Creating project [bold blue]{name}[/] using template [bold green]{template}[/]")
+                template_manager.create_project(template, name)
         else:
             console.print("[red]No template selected[/]")
-            
+
     except Exception as e:
         console.print(f"[bold red]Error:[/] {str(e)}")
         raise
