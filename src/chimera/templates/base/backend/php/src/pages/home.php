@@ -5,22 +5,28 @@ require_once __DIR__ . '/../Database.php';
 
 $title = 'ChimeraStack PHP Development Environment';
 $webPort = $_ENV['NGINX_PORT'] ?? $_ENV['WEB_PORT'] ?? '8080';
-$dbPort = $_ENV['DB_PORT'] ?? '3306';
-$adminPort = $_ENV['ADMIN_PORT'] ?? $_ENV['PHPMYADMIN_PORT'] ?? '8081';
 $dbEngine = $_ENV['DB_ENGINE'] ?? 'mysql';
-$dbHost = $_ENV['DB_HOST'] ?? $dbEngine;
 
-// Determine database display name
-$dbTypeName = 'MySQL';
+// Set ports based on database engine
 if ($dbEngine === 'postgresql') {
+    $dbPort = $_ENV['DB_PORT'] ?? $_ENV['POSTGRES_PORT'] ?? '5432';
+    $adminPort = $_ENV['PGADMIN_PORT'] ?? $_ENV['ADMIN_PORT'] ?? '8080';
     $dbTypeName = 'PostgreSQL';
     $adminToolName = 'pgAdmin';
 } elseif ($dbEngine === 'mariadb') {
+    $dbPort = $_ENV['DB_PORT'] ?? $_ENV['MARIADB_PORT'] ?? '3306';
+    $adminPort = $_ENV['PHPMYADMIN_PORT'] ?? $_ENV['ADMIN_PORT'] ?? '8080';
     $dbTypeName = 'MariaDB';
     $adminToolName = 'phpMyAdmin';
 } else {
+    // MySQL default
+    $dbPort = $_ENV['DB_PORT'] ?? $_ENV['MYSQL_PORT'] ?? '3306';
+    $adminPort = $_ENV['PHPMYADMIN_PORT'] ?? $_ENV['ADMIN_PORT'] ?? '8080';
+    $dbTypeName = 'MySQL';
     $adminToolName = 'phpMyAdmin';
 }
+
+$dbHost = $_ENV['DB_HOST'] ?? $dbEngine;
 
 // Get database connection info
 $db = Database::getInstance();
@@ -32,8 +38,17 @@ $dbDiagnostics = [
     'DB_ENGINE' => $_ENV['DB_ENGINE'] ?? getenv('DB_ENGINE') ?? 'not set',
     'DB_DATABASE' => $_ENV['DB_DATABASE'] ?? getenv('DB_DATABASE') ?? 'not set',
     'DB_USERNAME' => $_ENV['DB_USERNAME'] ?? getenv('DB_USERNAME') ?? 'not set',
-    'DB_PORT' => $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?? 'not set'
+    'DB_PORT' => $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?? 'not set',
+    'ADMIN_PORT' => $_ENV['ADMIN_PORT'] ?? getenv('ADMIN_PORT') ?? 'not set'
 ];
+
+if ($dbEngine === 'postgresql') {
+    $dbDiagnostics['POSTGRES_PORT'] = $_ENV['POSTGRES_PORT'] ?? getenv('POSTGRES_PORT') ?? 'not set';
+    $dbDiagnostics['PGADMIN_PORT'] = $_ENV['PGADMIN_PORT'] ?? getenv('PGADMIN_PORT') ?? 'not set';
+} else {
+    $dbDiagnostics['MYSQL_PORT'] = $_ENV['MYSQL_PORT'] ?? getenv('MYSQL_PORT') ?? 'not set';
+    $dbDiagnostics['PHPMYADMIN_PORT'] = $_ENV['PHPMYADMIN_PORT'] ?? getenv('PHPMYADMIN_PORT') ?? 'not set';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
