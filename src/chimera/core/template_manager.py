@@ -459,6 +459,13 @@ class TemplateManager:
         for compose_file in compose_files:
             self._process_yaml_file(compose_file, variables, is_compose=True)
 
+        # Process any PHP template files
+        php_templates = list(project_dir.glob('**/*.template'))
+        for template_file in php_templates:
+            target_file = template_file.parent / \
+                template_file.name.replace('.template', '')
+            self._process_template_file(template_file, target_file, variables)
+
         # Ensure docker-compose.yml exists (copy from base if needed)
         if not project_dir.joinpath('docker-compose.yml').exists():
             if project_dir.joinpath('docker-compose.base.yml').exists():
@@ -591,16 +598,14 @@ switch ($uri) {
 
             # Also remove any variant-specific docker-compose files that aren't our current variant
             if db_engine:
-                # Handle both naming conventions for PostgreSQL
-                variant_files = {
-                    'mysql': ['docker-compose.mysql.yml'],
-                    'mariadb': ['docker-compose.mariadb.yml'],
-                    'postgresql': ['docker-compose.postgresql.yml', 'docker-compose.pgsql.yml']
-                }
-
-                for variant, files in variant_files.items():
-                    if variant != db_engine:
-                        redundant_files.extend(files)
+                # Always remove all variant docker-compose files - we only need docker-compose.yml
+                variant_files = [
+                    'docker-compose.mysql.yml',
+                    'docker-compose.mariadb.yml',
+                    'docker-compose.postgresql.yml',
+                    'docker-compose.pgsql.yml'
+                ]
+                redundant_files.extend(variant_files)
 
             # Handle the case where we have a docker-compose.yml that wasn't properly updated
             # This can happen when the variant-specific docker-compose wasn't properly copied
@@ -732,34 +737,59 @@ switch ($uri) {
         admin_port = env_vars.get('ADMIN_PORT', env_vars.get(
             'PHPMYADMIN_PORT', env_vars.get('PGADMIN_PORT', '8080')))
 
-        # Determine template type based on directory structure
-        has_php = (project_dir / 'docker/php').exists()
-        has_mysql = (project_dir / 'docker/mysql').exists()
-        has_postgres = (project_dir / 'docker/postgres').exists()
-        has_mariadb = (project_dir / 'docker/mariadb').exists()
+        # Check for DB_ENGINE in env vars first
+        db_engine = env_vars.get('DB_ENGINE', '').lower()
+
+        # If no DB_ENGINE in env, determine based on directory structure
+        if not db_engine:
+            has_mysql = (project_dir / 'docker/mysql').exists()
+            has_postgres = (project_dir / 'docker/postgres').exists() or (
+                project_dir / 'docker/postgresql').exists()
+            has_mariadb = (project_dir / 'docker/mariadb').exists()
+
+            if has_mariadb:
+                db_engine = 'mariadb'
+            elif has_postgres:
+                db_engine = 'postgresql'
+            elif has_mysql:
+                db_engine = 'mysql'
+            else:
+                db_engine = 'mysql'  # Default
+
+        # Define database type based on engine
+        db_type_mapping = {
+            'mysql': 'MySQL',
+            'mariadb': 'MariaDB',
+            'postgresql': 'PostgreSQL'
+        }
+        db_type = db_type_mapping.get(db_engine, 'MySQL')
+
+        # Define admin tool based on engine
+        admin_tool_mapping = {
+            'mysql': 'phpMyAdmin',
+            'mariadb': 'phpMyAdmin',
+            'postgresql': 'pgAdmin'
+        }
+        admin_tool = admin_tool_mapping.get(db_engine, 'phpMyAdmin')
+
+        # Define host name based on engine
+        host_mapping = {
+            'mysql': 'mysql',
+            'mariadb': 'mariadb',
+            'postgresql': 'postgresql'
+        }
+        db_host = host_mapping.get(db_engine, db_engine)
 
         # Get project name
         project_name = project_dir.name
 
-        # Define database type
-        db_type = "MySQL"
-        if has_mariadb:
-            db_type = "MariaDB"
-        elif has_postgres:
-            db_type = "PostgreSQL"
-
-        # Define admin tool
-        admin_tool = "phpMyAdmin"
-        if has_postgres:
-            admin_tool = "pgAdmin"
-
-        # For MariaDB, include special badge or logo
+        # For specific DB engines, include special badge or logo
         db_badge = ""
-        if has_mariadb:
+        if db_engine == 'mariadb':
             db_badge = "\n[![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://mariadb.org/)"
-        elif has_postgres:
+        elif db_engine == 'postgresql':
             db_badge = "\n[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)"
-        elif has_mysql:
+        elif db_engine == 'mysql':
             db_badge = "\n[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)"
 
         # Build template-specific README content
@@ -793,7 +823,7 @@ A PHP development environment with {db_type} database created with ChimeraStack 
 - `docker/` - Docker configuration files
   - `nginx/` - Nginx web server configuration
   - `php/` - PHP-FPM configuration and Dockerfile
-  - `{'mariadb' if has_mariadb else 'mysql' if has_mysql else 'postgres'}/` - {db_type} database configuration
+  {f"  - `postgresql/` - {db_type} database configuration" if db_engine == 'postgresql' else f"  - `{db_engine}/` - {db_type} database configuration"}
 - `public/` - Web server document root (place your public files here)
 - `src/` - Application source code (PHP classes and logic)
   - `pages/` - PHP page templates
@@ -806,11 +836,11 @@ A PHP development environment with {db_type} database created with ChimeraStack 
 
 ## 📦 Database Access
 
-- **Host**: {('mariadb' if has_mariadb else 'mysql' if has_mysql else 'postgres').lower()}
+- **Host**: {db_host.lower()}
 - **Database**: {project_name}
 - **Username**: {project_name}
 - **Password**: secret
-- **Root Password**: rootsecret
+{'' if db_engine == 'postgresql' else '- **Root Password**: rootsecret'}
 
 You can connect to the database using {admin_tool} at http://localhost:{admin_port} or use any database client.
 
@@ -1210,3 +1240,35 @@ APP_DEBUG=true
             console.print(
                 "  • Web server is configured to serve from [cyan]public/[/] directory")
             console.print("  • View the README.md file for more details")
+
+    def _process_template_file(self, template_file: Path, target_file: Path, variables: dict) -> None:
+        """Process PHP template files and replace variables."""
+        try:
+            with open(template_file) as f:
+                template_content = f.read()
+
+            # Replace variables in the template content
+            for key, value in variables.items():
+                template_content = template_content.replace(
+                    f"${{{key}}}", str(value))
+                template_content = template_content.replace(
+                    f"${key}", str(value))
+
+            # Special handling for PHP index.html templates with database information
+            if template_file.name == 'index.html.template':
+                # Specifically fix PostgreSQL port references
+                if variables.get('DB_ENGINE') == 'postgresql':
+                    # Ensure PGADMIN_PORT is used correctly
+                    if 'PGADMIN_PORT' in variables and 'localhost:8081' in template_content:
+                        template_content = template_content.replace(
+                            'localhost:8081', f'localhost:{variables["PGADMIN_PORT"]}')
+
+            # Write the processed content to the target file
+            with open(target_file, 'w') as f:
+                f.write(template_content)
+
+            self._verbose_print(
+                f"[green]✓[/] Processed template: {template_file} -> {target_file}")
+        except Exception as e:
+            console.print(f"[red]Error processing PHP template: {str(e)}")
+            raise
