@@ -1,10 +1,39 @@
 <?php
 
 declare(strict_types=1);
+require_once __DIR__ . '/../Database.php';
+
 $title = 'ChimeraStack PHP Development Environment';
-$webPort = $_ENV['NGINX_PORT'] ?? '8080';
-$dbPort = $_ENV['MYSQL_PORT'] ?? '3306';
-$pmaPort = $_ENV['PHPMYADMIN_PORT'] ?? '8081';
+$webPort = $_ENV['NGINX_PORT'] ?? $_ENV['WEB_PORT'] ?? '8080';
+$dbPort = $_ENV['DB_PORT'] ?? '3306';
+$adminPort = $_ENV['ADMIN_PORT'] ?? $_ENV['PHPMYADMIN_PORT'] ?? '8081';
+$dbEngine = $_ENV['DB_ENGINE'] ?? 'mysql';
+$dbHost = $_ENV['DB_HOST'] ?? $dbEngine;
+
+// Determine database display name
+$dbTypeName = 'MySQL';
+if ($dbEngine === 'postgresql') {
+    $dbTypeName = 'PostgreSQL';
+    $adminToolName = 'pgAdmin';
+} elseif ($dbEngine === 'mariadb') {
+    $dbTypeName = 'MariaDB';
+    $adminToolName = 'phpMyAdmin';
+} else {
+    $adminToolName = 'phpMyAdmin';
+}
+
+// Get database connection info
+$db = Database::getInstance();
+$connectionInfo = $db->getConnectionInfo();
+
+// For diagnostic purposes
+$dbDiagnostics = [
+    'DB_HOST' => $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?? 'not set',
+    'DB_ENGINE' => $_ENV['DB_ENGINE'] ?? getenv('DB_ENGINE') ?? 'not set',
+    'DB_DATABASE' => $_ENV['DB_DATABASE'] ?? getenv('DB_DATABASE') ?? 'not set',
+    'DB_USERNAME' => $_ENV['DB_USERNAME'] ?? getenv('DB_USERNAME') ?? 'not set',
+    'DB_PORT' => $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?? 'not set'
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -81,17 +110,17 @@ $pmaPort = $_ENV['PHPMYADMIN_PORT'] ?? '8081';
             <tr>
                 <td>Web Server</td>
                 <td>Nginx + PHP-FPM</td>
-                <td><a href="http://localhost:<?= $webPort ?>" target="_blank">localhost:<?= $webPort ?></a></td>
+                <td><a href="http://localhost:<?= htmlspecialchars($webPort) ?>" target="_blank">localhost:<?= htmlspecialchars($webPort) ?></a></td>
             </tr>
             <tr>
                 <td>Database</td>
-                <td>MySQL <?= $_ENV['DB_DATABASE'] ?></td>
-                <td>localhost:<?= $dbPort ?></td>
+                <td><?= htmlspecialchars($dbTypeName) ?> <?= htmlspecialchars($_ENV['DB_DATABASE'] ?? 'test_project') ?></td>
+                <td>localhost:<?= htmlspecialchars($dbPort) ?></td>
             </tr>
             <tr>
                 <td>Database GUI</td>
-                <td>phpMyAdmin</td>
-                <td><a href="http://localhost:<?= $pmaPort ?>" target="_blank">localhost:<?= $pmaPort ?></a></td>
+                <td><?= htmlspecialchars($adminToolName) ?></td>
+                <td><a href="http://localhost:<?= htmlspecialchars($adminPort) ?>" target="_blank">localhost:<?= htmlspecialchars($adminPort) ?></a></td>
             </tr>
         </table>
     </div>
@@ -100,26 +129,32 @@ $pmaPort = $_ENV['PHPMYADMIN_PORT'] ?? '8081';
         <h2>Quick Links</h2>
         <ul>
             <li><a href="/info">PHP Info</a></li>
-            <li><a href="http://localhost:<?= $pmaPort ?>" target="_blank">phpMyAdmin</a></li>
+            <li><a href="http://localhost:<?= htmlspecialchars($adminPort) ?>" target="_blank"><?= htmlspecialchars($adminToolName) ?></a></li>
         </ul>
     </div>
 
     <div class="card">
         <h2>Database Connection Status</h2>
-        <?php
-        try {
-            $dsn = "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']}";
-            $pdo = new PDO($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD']);
-            $version = $pdo->query('SELECT VERSION()')->fetchColumn();
-            echo '<div class="status success">
-                ✓ Connected to MySQL Server ' . htmlspecialchars($version) . '<br>
-                Database: ' . htmlspecialchars($_ENV['DB_DATABASE']) . '<br>
-                User: ' . htmlspecialchars($_ENV['DB_USERNAME']) . '
-            </div>';
-        } catch (PDOException $e) {
-            echo '<div class="status error">✗ Database connection failed: ' . htmlspecialchars($e->getMessage()) . '</div>';
-        }
-        ?>
+        <?php if ($connectionInfo['connected']): ?>
+            <div class="status success">
+                ✓ Connected to <?= htmlspecialchars($dbTypeName) ?> Server <?= htmlspecialchars($connectionInfo['server_version']) ?><br>
+                Database: <?= htmlspecialchars($connectionInfo['database']) ?><br>
+                User: <?= htmlspecialchars($connectionInfo['user']) ?><br>
+                Host: <?= htmlspecialchars($connectionInfo['host'] ?? $dbHost) ?>
+            </div>
+        <?php else: ?>
+            <div class="status error">
+                ✗ Database connection failed: <?= htmlspecialchars($connectionInfo['error']) ?>
+            </div>
+            <div class="info">
+                <h3>Connection Details</h3>
+                <ul>
+                    <?php foreach ($dbDiagnostics as $key => $value): ?>
+                        <li><?= htmlspecialchars($key) ?>: <?= htmlspecialchars($value) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
     </div>
 </body>
 

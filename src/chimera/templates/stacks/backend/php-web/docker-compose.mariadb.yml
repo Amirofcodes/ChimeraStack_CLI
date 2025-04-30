@@ -1,17 +1,17 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: ${PROJECT_NAME}-mysql
+  mariadb:
+    image: mariadb:10.6
+    container_name: ${PROJECT_NAME}-mariadb
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "${MARIADB_PORT}:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:cached
+      - mariadb_data:/var/lib/mysql
+      - ./docker/mariadb/my.cnf:/etc/mysql/conf.d/custom.cnf:cached
     networks:
       - app_network
 
@@ -19,7 +19,7 @@ services:
     image: phpmyadmin/phpmyadmin
     container_name: ${PROJECT_NAME}-phpmyadmin
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: mariadb
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
     ports:
@@ -33,12 +33,12 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: ${PROJECT_NAME}-php
     environment:
-      DB_HOST: mysql
+      DB_HOST: mariadb
       DB_PORT: 3306
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_ENGINE: mysql
+      DB_ENGINE: mariadb
     volumes:
       - .:/var/www/html:cached
       - php_logs:/var/log/php-fpm
@@ -63,7 +63,7 @@ networks:
     name: ${PROJECT_NAME}_network
 
 volumes:
-  mysql_data:
-    name: ${PROJECT_NAME}_mysql_data
+  mariadb_data:
+    name: ${PROJECT_NAME}_mariadb_data
   php_logs:
-    name: ${PROJECT_NAME}_php_logs
+    name: ${PROJECT_NAME}_php_logs 
