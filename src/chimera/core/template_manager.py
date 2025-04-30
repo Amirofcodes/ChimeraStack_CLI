@@ -591,26 +591,52 @@ switch ($uri) {
 
             # Also remove any variant-specific docker-compose files that aren't our current variant
             if db_engine:
-                for variant in ['mysql', 'postgresql', 'mariadb']:
+                # Handle both naming conventions for PostgreSQL
+                variant_files = {
+                    'mysql': ['docker-compose.mysql.yml'],
+                    'mariadb': ['docker-compose.mariadb.yml'],
+                    'postgresql': ['docker-compose.postgresql.yml', 'docker-compose.pgsql.yml']
+                }
+
+                for variant, files in variant_files.items():
                     if variant != db_engine:
-                        redundant_files.append(f"docker-compose.{variant}.yml")
+                        redundant_files.extend(files)
 
             # Handle the case where we have a docker-compose.yml that wasn't properly updated
             # This can happen when the variant-specific docker-compose wasn't properly copied
             if db_engine and db_engine != 'mysql':
-                variant_compose = project_dir / \
-                    f"docker-compose.{db_engine}.yml"
+                # Handle both naming conventions for PostgreSQL
+                if db_engine == 'postgresql':
+                    variant_files = [project_dir / 'docker-compose.postgresql.yml',
+                                     project_dir / 'docker-compose.pgsql.yml']
+                    variant_compose = next(
+                        (f for f in variant_files if f.exists()), None)
+                else:
+                    variant_compose = project_dir / \
+                        f"docker-compose.{db_engine}.yml"
+
                 main_compose = project_dir / "docker-compose.yml"
 
-                if variant_compose.exists() and main_compose.exists():
+                if variant_compose and variant_compose.exists() and main_compose.exists():
                     # Check if we're using the wrong database in docker-compose.yml
                     with open(main_compose, 'r') as f:
                         compose_content = f.read()
 
-                    # If the docker-compose.yml is still using mysql instead of our variant
-                    if f"image: mysql:" in compose_content and db_engine != 'mysql':
+                    # Check for incorrect database configurations
+                    wrong_db_config = False
+                    if db_engine == 'postgresql':
+                        if "image: mysql:" in compose_content or "image: mariadb:" in compose_content:
+                            wrong_db_config = True
+                    elif db_engine == 'mariadb':
+                        if "image: mysql:" in compose_content or "image: postgres:" in compose_content:
+                            wrong_db_config = True
+                    elif db_engine == 'mysql':
+                        if "image: mariadb:" in compose_content or "image: postgres:" in compose_content:
+                            wrong_db_config = True
+
+                    if wrong_db_config:
                         console.print(
-                            f"[yellow]Warning:[/] docker-compose.yml still using MySQL. Replacing with {db_engine} version.")
+                            f"[yellow]Warning:[/] docker-compose.yml using incorrect database. Replacing with {db_engine} version.")
 
                         # Replace with the correct variant file
                         shutil.copy2(variant_compose, main_compose)
@@ -643,19 +669,19 @@ switch ($uri) {
                 'www',     # Consolidated to public directory
             ]
 
-            # Remove mysql directory if using mariadb or postgresql
-            # and remove postgres directory if using mysql or mariadb
+            # Remove database-related directories that don't match the current engine
             if db_engine == 'mariadb' or db_engine == 'postgresql':
                 if (project_dir / 'docker/mysql').exists():
                     redundant_dirs.append('docker/mysql')
 
-            if db_engine == 'mysql' or db_engine == 'mariadb':
-                if (project_dir / 'docker/postgres').exists():
-                    redundant_dirs.append('docker/postgres')
-
             if db_engine == 'mysql' or db_engine == 'postgresql':
                 if (project_dir / 'docker/mariadb').exists():
                     redundant_dirs.append('docker/mariadb')
+
+            if db_engine == 'mysql' or db_engine == 'mariadb':
+                if (project_dir / 'docker/postgres' or project_dir / 'docker/postgresql').exists():
+                    redundant_dirs.append('docker/postgres')
+                    redundant_dirs.append('docker/postgresql')
 
             for directory in redundant_dirs:
                 dir_path = project_dir / directory
@@ -831,7 +857,7 @@ PHP_ERROR_REPORTING=E_ALL
 # Database Configuration
 DB_HOST={db_engine if db_engine != 'mariadb' else 'mariadb'}
 # External port mapping - inside Docker, the internal port remains standard (3306 for MySQL/MariaDB, 5432 for PostgreSQL)
-DB_PORT={variables.get('DB_PORT', '3306')}
+DB_PORT={variables.get('DB_PORT', '3306' if db_engine in ['mysql', 'mariadb'] else '5432')}
 DB_ENGINE={db_engine}
 DB_DATABASE={variables.get('DB_DATABASE', variables.get('PROJECT_NAME', 'chimera-project'))}
 DB_USERNAME={variables.get('DB_USERNAME', variables.get('PROJECT_NAME', 'chimera-project'))}
@@ -846,13 +872,13 @@ DB_ROOT_PASSWORD={variables.get('DB_ROOT_PASSWORD', 'rootsecret')}
             env_content += f"POSTGRES_PORT={variables.get('DB_PORT', '5432')}\n"
 
         # Add admin tool variables
-        if any(k for k in variables if 'PHPMYADMIN' in k or 'ADMIN_PORT' in k):
+        if db_engine in ['mysql', 'mariadb'] and any(k for k in variables if 'PHPMYADMIN' in k or 'ADMIN_PORT' in k):
             env_content += f"""
 # phpMyAdmin Configuration
 PHPMYADMIN_PORT={variables.get('PHPMYADMIN_PORT', variables.get('ADMIN_PORT', '8080'))}
 PMA_HOST={db_engine}
 """
-        elif db_engine == 'postgresql' and any(k for k in variables if 'PGADMIN' in k or 'ADMIN_PORT' in k):
+        elif db_engine == 'postgresql' and any(k for k in variables if 'PGADMIN' in k or 'ADMIN_PORT' in k or True):
             env_content += f"""
 # pgAdmin Configuration
 PGADMIN_PORT={variables.get('PGADMIN_PORT', variables.get('ADMIN_PORT', '8080'))}
@@ -914,8 +940,9 @@ APP_DEBUG=true
 
                     # Add database environment variables
                     db_vars = {
-                        'DB_HOST': variables.get('DB_ENGINE', 'mysql') if variables.get('DB_ENGINE', 'mysql') != 'mariadb' else 'mariadb',
-                        'DB_PORT': '3306',  # Use internal container port
+                        'DB_HOST': variables.get('DB_ENGINE', 'mysql') if variables.get('DB_ENGINE', 'mysql') not in ['mariadb', 'postgresql'] else variables.get('DB_ENGINE', 'mysql'),
+                        # Use internal container port
+                        'DB_PORT': '3306' if variables.get('DB_ENGINE', 'mysql') in ['mysql', 'mariadb'] else '5432',
                         'DB_DATABASE': variables.get('DB_DATABASE', project_name),
                         'DB_USERNAME': variables.get('DB_USERNAME', project_name),
                         'DB_PASSWORD': variables.get('DB_PASSWORD', 'secret'),

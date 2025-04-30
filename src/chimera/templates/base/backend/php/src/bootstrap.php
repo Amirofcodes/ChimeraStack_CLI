@@ -43,6 +43,22 @@ if (isset($_ENV['DB_ENGINE']) && ($_ENV['DB_ENGINE'] === 'mariadb' || $_ENV['DB_
     }
 }
 
+// Force DB_PORT to be 3306 inside Docker containers when connecting to MySQL/MariaDB
+// This ensures the correct internal port is used regardless of external port mapping
+if (file_exists('/.dockerenv')) {
+    if (isset($_ENV['DB_ENGINE'])) {
+        if ($_ENV['DB_ENGINE'] === 'mariadb' || $_ENV['DB_ENGINE'] === 'mysql') {
+            // Inside Docker, always use 3306 for internal MySQL/MariaDB connections
+            $_ENV['DB_PORT'] = '3306';
+            putenv('DB_PORT=3306');
+        } elseif ($_ENV['DB_ENGINE'] === 'postgresql') {
+            // Inside Docker, always use 5432 for internal PostgreSQL connections
+            $_ENV['DB_PORT'] = '5432';
+            putenv('DB_PORT=5432');
+        }
+    }
+}
+
 spl_autoload_register(function ($class) {
     $file = __DIR__ . DIRECTORY_SEPARATOR .
         str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $class) . '.php';
