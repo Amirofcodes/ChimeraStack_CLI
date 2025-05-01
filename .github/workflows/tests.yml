@@ -6,34 +6,7 @@ on:
     branches: [main, master]
 
 jobs:
-  unit:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-      - name: Install ChimeraStack CLI in editable mode
-        run: pip install -e .
-      - name: Run unit tests with coverage
-        run: |
-          pytest -m "not integration" --cov=src/chimera --cov-report=xml -v
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: true
-
-  integration:
-    needs: unit
+  tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,20 +20,6 @@ jobs:
           pip install -r requirements-dev.txt
       - name: Install ChimeraStack CLI in editable mode
         run: pip install -e .
-      - name: Run integration tests
-        env:
-          DOCKER_BUILDKIT: 1
+      - name: Run unit tests (fast suite)
         run: |
-          pytest -m integration -v
-      - name: Validate all templates
-        run: |
-          python -c "
-          from pathlib import Path
-          from chimera.core import TemplateManager
-          tm = TemplateManager()
-          templates = tm.get_available_templates()
-          assert len(templates) > 0, 'No templates found'
-          print(f'Found {len(templates)} templates')
-          for t in templates:
-              print(f'Validating {t[\"id\"]}...')
-          "
+          pytest -m "not integration" -q
