@@ -1283,29 +1283,7 @@ APP_DEBUG=true
             f"  2. [yellow]docker-compose up -d[/] [dim](Start the development environment)[/]")
 
         # Template-specific instructions based on template_id
-        if 'php' in template_id:
-            web_port = port_mappings.get('web', 8000)
-            admin_port = port_mappings.get('admin', 8080)
-
-            console.print("\n[bold]Access your development environment:[/]")
-            console.print(f"  • [cyan]Website:[/] http://localhost:{web_port}")
-
-            if 'mysql' in variant or 'mariadb' in variant:
-                console.print(
-                    f"  • [cyan]phpMyAdmin:[/] http://localhost:{admin_port}")
-            elif 'postgresql' in variant:
-                console.print(
-                    f"  • [cyan]pgAdmin:[/] http://localhost:{admin_port}")
-
-            console.print("\n[bold]Development:[/]")
-            console.print(
-                "  • Place your PHP files in the [cyan]src/[/] directory")
-            console.print(
-                "  • Web server is configured to serve from [cyan]public/[/] directory")
-            console.print("  • View the README.md file for more details")
-
-        # Fullstack React + PHP template
-        elif 'react-php' in template_id or ('react' in template_id and 'php' in template_id):
+        if 'react' in template_id and 'php' in template_id:
             web_port = port_mappings.get('web', 8000)
             frontend_port = port_mappings.get('frontend', 3000)
             admin_port = port_mappings.get('admin', 8080)
@@ -1325,11 +1303,33 @@ APP_DEBUG=true
 
             console.print("\n[bold]Development:[/]")
             console.print(
-                "  • React frontend located in [cyan]frontend/[/] – use \[yellow]npm start\] for hot-reload dev server")
+                "  • React frontend located in [cyan]frontend/[/] – run [yellow]npm start[/] for hot-reload dev server")
             console.print(
                 "  • PHP backend located in [cyan]backend/[/] – served through Nginx at /api")
             console.print(
                 "  • See README.md for full workflow and helpful commands")
+
+        # 2. Stand-alone PHP backend templates
+        elif 'php' in template_id:
+            web_port = port_mappings.get('web', 8000)
+            admin_port = port_mappings.get('admin', 8080)
+
+            console.print("\n[bold]Access your development environment:[/]")
+            console.print(f"  • [cyan]Website:[/] http://localhost:{web_port}")
+
+            if 'mysql' in variant or 'mariadb' in variant:
+                console.print(
+                    f"  • [cyan]phpMyAdmin:[/] http://localhost:{admin_port}")
+            elif 'postgresql' in variant:
+                console.print(
+                    f"  • [cyan]pgAdmin:[/] http://localhost:{admin_port}")
+
+            console.print("\n[bold]Development:[/]")
+            console.print(
+                "  • Place your PHP files in the [cyan]src/[/] directory")
+            console.print(
+                "  • Web server is configured to serve from [cyan]public/[/] directory")
+            console.print("  • View the README.md file for more details")
 
     def _process_template_file(self, template_file: Path, target_file: Path, variables: dict) -> None:
         """Process PHP template files and replace variables."""
