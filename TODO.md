@@ -8,10 +8,12 @@
 
 ## 1. Template Specification & Validation
 
-- [ ] Draft JSON-Schema for `template.yaml` (stack, component, core).
-- [ ] Add schema validation step in `TemplateManager` (fail fast with
+- [x] Draft JSON-Schema for `template.yaml` (stack, component, core).
+- [x] Add schema validation step in `TemplateManager` (fail fast with
       helpful error).
-- [ ] Wire validation into CI ( `scripts/validate_templates.py`).
+- [x] Create `scripts/validate_templates.py` to walk templates and validate.
+- [x] Wire validation into local pre-commit hook.
+- [ ] Wire validation into GitHub Actions.
 
 ## 2. Rendering Pipeline
 
@@ -54,7 +56,7 @@
 - [ ] Unit tests for `TemplateManager.create_project()` covering
       each stack + variant.
 - [ ] Integration test: `chimera create temp-proj -t backend/php-web -v
-  postgresql` then `docker compose config` must be valid.
+postgresql` then `docker compose config` must be valid.
 - [ ] GitHub Actions job running tests + schema validation.
 
 ## 8. Developer Documentation

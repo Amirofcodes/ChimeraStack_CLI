@@ -9,6 +9,7 @@ import docker
 from rich.console import Console
 from .port_scanner import PortScanner
 from .port_allocator import PortAllocator
+from .template_validator import validate_template, TemplateValidationError
 
 console = Console()
 
@@ -166,6 +167,17 @@ class TemplateManager:
                     f"[red]Error:[/] Template {template_id} not found or invalid")
                 return False
 
+            # Load & validate template configuration
+            with open(template_path / 'template.yaml') as f:
+                template_config = yaml.safe_load(f)
+
+            try:
+                validate_template(
+                    template_config, template_path / 'template.yaml')
+            except TemplateValidationError as ve:
+                console.print(f"[red]Template validation failed:[/] {ve}")
+                return False
+
             if target_dir is None:
                 target_dir = Path.cwd() / project_name
             else:
@@ -175,10 +187,6 @@ class TemplateManager:
                 console.print(
                     f"[red]Error:[/] Directory {target_dir} already exists")
                 return False
-
-            # Load template configuration
-            with open(template_path / 'template.yaml') as f:
-                template_config = yaml.safe_load(f)
 
             # Apply variant if provided
             if variant and variant != 'default' and 'components' in template_config:
