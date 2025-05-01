@@ -27,18 +27,18 @@
 
 - [x] Adopt single canonical compose file per stack:
       `docker-compose.<variant>.yml` (no `.override`, no `.base`).
-- [ ] Adopted for backend/php-web and fullstack/react-php stacks.
-- [ ] Remaining stacks (if any) to migrate.
-- [ ] Flatten compose generation logic – drop heuristic scan in
+- [x] Adopted for backend/php-web and fullstack/react-php stacks.
+- [x] Remaining stacks (if any) to migrate. _(None left)_
+- [x] Flatten compose generation logic – drop heuristic scan in
       `_allocate_service_ports()`.
 - [ ] Move compose fragments that belong to components into
       `base/<component>/compose/<service>.yml` (to be included by Jinja2).
 
 ## 4. Port Allocation Refactor
 
-- [ ] Extract port range mapping to `config/ports.yaml`.
-- [ ] Make `PortAllocator` read ranges from config.
-- [ ] Remove fallback scan over all compose files.
+- [x] Extract port range mapping to `config/ports.yaml`.
+- [x] Make `PortAllocator` read ranges from config.
+- [x] Remove fallback scan over all compose files.
 
 ## 5. Cleanup Mechanism
 
