@@ -1,7 +1,13 @@
 name: "React PHP Fullstack"
 version: "1.0.0"
-description: "Complete fullstack development environment with React frontend, PHP backend, and MySQL database"
+description: "Complete fullstack development environment with React frontend, PHP backend, and choice of database"
 type: "stack"
+
+# Define available variants
+variants:
+  - mysql
+  - mariadb
+  - postgresql
 
 # Stack composition
 components:
@@ -14,8 +20,12 @@ components:
     required: true
 
   database:
-    source: "base/database/mysql" # Fullstack template uses MySQL by default
+    source: "base/database/*" # Allow CLI to substitute appropriate database variant
     required: true
+    variants:
+      mysql: "base/database/mysql"
+      mariadb: "base/database/mariadb"
+      postgresql: "base/database/postgresql"
 
   frontend:
     type: "frontend"
@@ -33,7 +43,7 @@ stack:
   type: "fullstack"
   frontend:
     framework: "react"
-    version: "18"
+    version: "20"
     dev_server: true
   backend:
     api_prefix: "/api"
@@ -44,6 +54,8 @@ tags:
   - react
   - php
   - mysql
+  - mariadb
+  - postgresql
   - fullstack
   - api
   - development
@@ -59,13 +71,14 @@ welcome_page:
       service: "backend"
       url: "http://localhost:${WEB_PORT}/api"
     - title: "Database"
-      service: "mysql"
+      service: "db"
       port: "${DB_PORT}"
+      type: "${DB_CONNECTION}"
       credentials:
         database: "${DB_DATABASE}"
         username: "${DB_USERNAME}"
         password: "${DB_PASSWORD}"
-    - title: "phpMyAdmin"
+    - title: "Database Admin"
       service: "phpmyadmin"
       url: "http://localhost:${ADMIN_PORT}"
 
@@ -80,29 +93,38 @@ services:
     image: "phpmyadmin/phpmyadmin"
     env:
       PMA_HOST: "db"
-      PMA_PORT: "${DB_PORT}"
+      PMA_PORT: "3306"
 
 # Files to be generated/processed
 files:
   - source: "docker-compose.yml"
     target: "docker-compose.yml"
-  - source: ".env.example"
-    target: ".env"
-  - source: "frontend/.env.example"
-    target: "frontend/.env"
-  - source: "backend/.env.example"
-    target: "backend/.env"
+  - source: "docker-compose.mysql.override.yml"
+    target: "docker-compose.override.yml"
+    variant: "mysql"
+  - source: "docker-compose.mariadb.override.yml"
+    target: "docker-compose.override.yml"
+    variant: "mariadb"
+  - source: "docker-compose.postgresql.override.yml"
+    target: "docker-compose.override.yml"
+    variant: "postgresql"
+  - source: "backend/bootstrap.php"
+    target: "backend/bootstrap.php"
+  - source: "README.md"
+    target: "README.md"
 
 # Network configuration
 network:
-  name: "${PROJECT_NAME}_network"
+  name: "app-network"
   driver: "bridge"
 
 # Post-creation hooks
 post_create:
+  - working_dir: "."
+    command: "mkdir -p frontend"
+  - working_dir: "."
+    command: "npx create-react-app frontend --template typescript"
   - working_dir: "frontend"
-    command: "npm install"
+    command: "npm install axios"
   - working_dir: "backend"
-    command: "composer install"
-  - working_dir: "backend"
-    command: "php artisan key:generate"
+    command: "composer install || echo 'Skipping composer install'"

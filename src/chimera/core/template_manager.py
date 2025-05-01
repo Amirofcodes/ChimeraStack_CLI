@@ -492,6 +492,27 @@ class TemplateManager:
                     self._verbose_print(
                         f"[green]✓[/] Created docker-compose.yml from {variant} template")
 
+        # ------------------------------------------------------------------
+        # Substitute variables in Markdown documentation (e.g. README.md)
+        # ------------------------------------------------------------------
+        md_files = list(project_dir.glob('**/*.md'))
+        for md_file in md_files:
+            try:
+                with open(md_file, 'r') as f:
+                    content = f.read()
+
+                for key, value in variables.items():
+                    content = content.replace(f"${{{key}}}", str(value))
+                    content = content.replace(f"${key}", str(value))
+
+                with open(md_file, 'w') as f:
+                    f.write(content)
+
+                self._verbose_print(
+                    f"[green]✓[/] Updated documentation: {md_file.relative_to(project_dir)}")
+            except Exception:
+                pass
+
         # Create public directory with proper router
         public_dir = project_dir / 'public'
         public_dir.mkdir(parents=True, exist_ok=True)
@@ -597,15 +618,16 @@ switch ($uri) {
             ]
 
             # Also remove any variant-specific docker-compose files that aren't our current variant
-            if db_engine:
-                # Always remove all variant docker-compose files - we only need docker-compose.yml
-                variant_files = [
-                    'docker-compose.mysql.yml',
-                    'docker-compose.mariadb.yml',
-                    'docker-compose.postgresql.yml',
-                    'docker-compose.pgsql.yml'
-                ]
-                redundant_files.extend(variant_files)
+            variant_files = [
+                'docker-compose.mysql.yml',
+                'docker-compose.mariadb.yml',
+                'docker-compose.postgresql.yml',
+                'docker-compose.pgsql.yml',
+                'docker-compose.mysql.override.yml',
+                'docker-compose.mariadb.override.yml',
+                'docker-compose.postgresql.override.yml'
+            ]
+            redundant_files.extend(variant_files)
 
             # Handle the case where we have a docker-compose.yml that wasn't properly updated
             # This can happen when the variant-specific docker-compose wasn't properly copied
@@ -708,7 +730,32 @@ switch ($uri) {
 
             # Create an informative README.md if it doesn't exist
             readme_path = project_dir / 'README.md'
-            self._create_readme(project_dir, readme_path)
+            if not readme_path.exists():
+                self._create_readme(project_dir, readme_path)
+
+            # ---------------------------------------------------------------------------------
+            # Remove database seed / schema scripts that belong to engines we did not choose.
+            # This keeps the generated project tidy (e.g. no 01-schema-pgsql.sql when using MySQL)
+            # ---------------------------------------------------------------------------------
+            init_dir = project_dir / 'database' / 'init'
+            if init_dir.exists():
+                for file in init_dir.iterdir():
+                    fname = file.name.lower()
+                    # Remove PostgreSQL scripts when engine is MySQL/MariaDB and vice-versa
+                    if db_engine in ['mysql', 'mariadb'] and ('pgsql' in fname or 'postgres' in fname):
+                        try:
+                            file.unlink()
+                            self._verbose_print(
+                                f"[green]✓[/] Removed irrelevant init script: {file.name}")
+                        except Exception:
+                            pass
+                    elif db_engine == 'postgresql' and ('mysql' in fname or 'mariadb' in fname):
+                        try:
+                            file.unlink()
+                            self._verbose_print(
+                                f"[green]✓[/] Removed irrelevant init script: {file.name}")
+                        except Exception:
+                            pass
 
         except Exception as e:
             console.print(
