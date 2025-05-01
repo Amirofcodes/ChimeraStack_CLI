@@ -98,13 +98,17 @@ def template_manager(tmp_path):
                 "version": "latest"
             },
             "config": {
-                "port_range": "3306-3399" if db != "postgresql" else "5432-5632",
+                "port_range": (
+                    "3306-3399" if db != "postgresql" else "5432-5632"
+                ),
                 "env_prefix": "DB"
             },
             "services": {
                 "db": {
                     "type": db,
-                    "port_range": "3306-3399" if db != "postgresql" else "5432-5632",
+                    "port_range": (
+                        "3306-3399" if db != "postgresql" else "5432-5632"
+                    ),
                     "required": True,
                     "env_prefix": "DB"
                 }
@@ -118,7 +122,9 @@ def template_manager(tmp_path):
             "environment": {
                 "DB_ENGINE": db,
                 "DB_HOST": db,
-                "DB_PORT": "3306" if db != "postgresql" else "5432",
+                "DB_PORT": (
+                    "3306" if db != "postgresql" else "5432"
+                ),
                 "DB_DATABASE": "${PROJECT_NAME}",
                 "DB_USERNAME": "${PROJECT_NAME}",
                 "DB_PASSWORD": "secret",
@@ -208,7 +214,9 @@ def template_manager(tmp_path):
                     "image": "php:8.2-fpm",
                     "environment": {
                         "DB_HOST": db,
-                        "DB_PORT": "3306" if db != "postgresql" else "5432",
+                        "DB_PORT": (
+                            "3306" if db != "postgresql" else "5432"
+                        ),
                         "DB_DATABASE": "${DB_DATABASE}",
                         "DB_USERNAME": "${DB_USERNAME}",
                         "DB_PASSWORD": "${DB_PASSWORD}",
