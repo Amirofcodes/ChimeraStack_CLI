@@ -148,17 +148,37 @@ def template_manager(tmp_path):
             "services": {
                 db: {
                     "image": f"{db}:latest",
-                    "ports": [f"${{DB_PORT}}:{3306 if db != 'postgresql' else 5432}"],
+                    "ports": [
+                        f"${{DB_PORT}}:{3306 if db != 'postgresql' else 5432}"
+                    ],
                     "environment": {
-                        "MYSQL_DATABASE": "${DB_DATABASE}" if db == "mysql" else None,
-                        "MYSQL_USER": "${DB_USERNAME}" if db == "mysql" else None,
-                        "MYSQL_PASSWORD": "${DB_PASSWORD}" if db == "mysql" else None,
-                        "MYSQL_ROOT_PASSWORD": "${DB_ROOT_PASSWORD}" if db == "mysql" else None,
-                        "POSTGRES_DB": "${DB_DATABASE}" if db == "postgresql" else None,
-                        "POSTGRES_USER": "${DB_USERNAME}" if db == "postgresql" else None,
-                        "POSTGRES_PASSWORD": "${DB_PASSWORD}" if db == "postgresql" else None,
-                        "MARIADB_DATABASE": "${DB_DATABASE}" if db == "mariadb" else None,
-                        "MARIADB_USER": "${DB_USERNAME}" if db == "mariadb" else None,
+                        "MYSQL_DATABASE": (
+                            "${DB_DATABASE}" if db == "mysql" else None
+                        ),
+                        "MYSQL_USER": (
+                            "${DB_USERNAME}" if db == "mysql" else None
+                        ),
+                        "MYSQL_PASSWORD": (
+                            "${DB_PASSWORD}" if db == "mysql" else None
+                        ),
+                        "MYSQL_ROOT_PASSWORD": (
+                            "${DB_ROOT_PASSWORD}" if db == "mysql" else None
+                        ),
+                        "POSTGRES_DB": (
+                            "${DB_DATABASE}" if db == "postgresql" else None
+                        ),
+                        "POSTGRES_USER": (
+                            "${DB_USERNAME}" if db == "postgresql" else None
+                        ),
+                        "POSTGRES_PASSWORD": (
+                            "${DB_PASSWORD}" if db == "postgresql" else None
+                        ),
+                        "MARIADB_DATABASE": (
+                            "${DB_DATABASE}" if db == "mariadb" else None
+                        ),
+                        "MARIADB_USER": (
+                            "${DB_USERNAME}" if db == "mariadb" else None
+                        ),
                         "MARIADB_PASSWORD": (
                             "${DB_PASSWORD}" if db == "mariadb" else None
                         ),
