@@ -1304,6 +1304,33 @@ APP_DEBUG=true
                 "  • Web server is configured to serve from [cyan]public/[/] directory")
             console.print("  • View the README.md file for more details")
 
+        # Fullstack React + PHP template
+        elif 'react-php' in template_id or ('react' in template_id and 'php' in template_id):
+            web_port = port_mappings.get('web', 8000)
+            frontend_port = port_mappings.get('frontend', 3000)
+            admin_port = port_mappings.get('admin', 8080)
+
+            console.print("\n[bold]Access your development environment:[/]")
+            console.print(
+                f"  • [cyan]Frontend Dev Server:[/] http://localhost:{frontend_port}")
+            console.print(
+                f"  • [cyan]Backend API:[/] http://localhost:{web_port}/api")
+
+            if 'mysql' in variant or 'mariadb' in variant:
+                console.print(
+                    f"  • [cyan]phpMyAdmin:[/] http://localhost:{admin_port}")
+            elif 'postgresql' in variant:
+                console.print(
+                    f"  • [cyan]pgAdmin:[/] http://localhost:{admin_port}")
+
+            console.print("\n[bold]Development:[/]")
+            console.print(
+                "  • React frontend located in [cyan]frontend/[/] – use \[yellow]npm start\] for hot-reload dev server")
+            console.print(
+                "  • PHP backend located in [cyan]backend/[/] – served through Nginx at /api")
+            console.print(
+                "  • See README.md for full workflow and helpful commands")
+
     def _process_template_file(self, template_file: Path, target_file: Path, variables: dict) -> None:
         """Process PHP template files and replace variables."""
         try:
