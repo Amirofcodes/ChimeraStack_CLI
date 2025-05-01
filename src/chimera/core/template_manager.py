@@ -480,31 +480,41 @@ class TemplateManager:
                 template_file.name.replace('.template', '')
             self._process_template_file(template_file, target_file, variables)
 
-        # Ensure docker-compose.yml exists (copy from base if needed)
-        if not project_dir.joinpath('docker-compose.yml').exists():
-            if project_dir.joinpath('docker-compose.base.yml').exists():
-                shutil.copy2(
-                    project_dir.joinpath('docker-compose.base.yml'),
-                    project_dir.joinpath('docker-compose.yml')
-                )
-                # Process the copied file
-                self._process_yaml_file(project_dir.joinpath(
-                    'docker-compose.yml'), variables, is_compose=True)
-                self._verbose_print(
-                    "[green]✓[/] Created docker-compose.yml from base template")
+        # ------------------------------------------------------------------
+        # Ensure a **single canonical** docker-compose.yml exists in the
+        # generated project.
+        # Priority:
+        #   1. Variant-specific file  (docker-compose.<variant>.yml)
+        #   2. Generic docker-compose.yml already in the template
+        # We intentionally drop support for legacy `.base` / `.override`
+        # files to simplify the stack layout (§3 of the cleanup checklist).
+        # ------------------------------------------------------------------
 
-            # Look for variant-specific compose file
-            elif 'DB_ENGINE' in variables:
-                variant = variables['DB_ENGINE']
-                variant_file = project_dir / f"docker-compose.{variant}.yml"
-                if variant_file.exists():
-                    shutil.copy2(variant_file, project_dir /
-                                 'docker-compose.yml')
-                    # Process the copied file
-                    self._process_yaml_file(project_dir.joinpath(
-                        'docker-compose.yml'), variables, is_compose=True)
-                    self._verbose_print(
-                        f"[green]✓[/] Created docker-compose.yml from {variant} template")
+        if not project_dir.joinpath('docker-compose.yml').exists():
+            variant = variables.get('DB_ENGINE')
+
+            variant_file: Path | None = None
+            if variant and variant != 'default':
+                candidate = project_dir / f"docker-compose.{variant}.yml"
+                if candidate.exists():
+                    variant_file = candidate
+
+            if variant_file is not None:
+                shutil.copy2(variant_file, project_dir / 'docker-compose.yml')
+                self._verbose_print(
+                    f"[green]✓[/] Using variant compose file: {variant_file.name}")
+            elif project_dir.joinpath('docker-compose.yml').exists():
+                # Nothing to do – file already present
+                pass
+            else:
+                console.print(
+                    "[red]Error:[/] No canonical docker-compose file found for the selected stack.")
+                raise FileNotFoundError(
+                    "Missing docker-compose.yml for generated project")
+
+            # After we have the file, process it for variable substitution
+            self._process_yaml_file(project_dir.joinpath(
+                'docker-compose.yml'), variables, is_compose=True)
 
         # ------------------------------------------------------------------
         # Substitute variables in Markdown documentation (e.g. README.md)
