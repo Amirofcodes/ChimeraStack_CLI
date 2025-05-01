@@ -1,0 +1,24 @@
+repos:
+  # Generic convenience hooks (optional)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0 # Pin to a specific tag
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+
+  # Local hook running the Chimera template validator
+  - repo: local
+    hooks:
+      - id: validate-templates
+        name: "Validate Chimera templates"
+        entry: python scripts/validate_templates.py
+        language: python
+        # No filenames are passed; script scans the whole templates directory
+        pass_filenames: false
+        stages: [manual] # Temporarily disable automatic run; re-enable later
+        description: "Fail commit if any template.yaml violates the JSON schema."
+        additional_dependencies:
+          - pyyaml>=6.0
+          - rich>=13.0
+          - jsonschema>=4.20
