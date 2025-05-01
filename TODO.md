@@ -25,8 +25,10 @@
 
 ## 3. Docker-Compose Strategy
 
-- [ ] Adopt single canonical compose file per stack:
+- [x] Adopt single canonical compose file per stack:
       `docker-compose.<variant>.yml` (no `.override`, no `.base`).
+- [ ] Adopted for backend/php-web and fullstack/react-php stacks.
+- [ ] Remaining stacks (if any) to migrate.
 - [ ] Flatten compose generation logic – drop heuristic scan in
       `_allocate_service_ports()`.
 - [ ] Move compose fragments that belong to components into
