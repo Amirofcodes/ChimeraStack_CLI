@@ -29,7 +29,7 @@ def test_cli_smoke(tmp_path: Path, template_id: str, variant: str):
     # Ensure canonical compose exists and no stray variant files remain
     assert project_dir.joinpath("docker-compose.yml").exists()
     stray = list(project_dir.glob("docker-compose.*.yml"))
-    assert len(stray) == 1, f"stray compose files found: {stray}"
+    assert len(stray) == 0, f"Unexpected stray compose files found: {stray}"
 
     # Ensure .env generated
     assert project_dir.joinpath(".env").exists()
