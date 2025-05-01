@@ -1,9 +1,13 @@
 """
 Port allocation management for ChimeraStack CLI
 """
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Set, Any
 from dataclasses import dataclass
+from pathlib import Path
+import yaml
+
 from .port_scanner import PortScanner
+
 
 @dataclass
 class PortRange:
@@ -15,10 +19,50 @@ class PortRange:
         if self.allocated is None:
             self.allocated = set()
 
+
 class PortAllocator:
-    def __init__(self):
+    DEFAULT_CONFIG = Path(__file__).resolve(
+    ).parent.parent / "config" / "ports.yaml"
+
+    def __init__(self, config_path: str | Path | None = None):
         self.scanner = PortScanner()
-        self.ranges = {
+        self.ranges = self._load_ranges(config_path)
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _load_ranges(self, config_path: str | Path | None) -> Dict[str, Dict[str, "PortRange"]]:
+        """Load port ranges from YAML; fall back to legacy hard-coded dict."""
+
+        path = Path(config_path) if config_path else self.DEFAULT_CONFIG
+
+        if path.exists():
+            try:
+                with open(path, "r") as f:
+                    data: Dict[str, Any] = yaml.safe_load(f) or {}
+
+                parsed: Dict[str, Dict[str, PortRange]] = {}
+                for service_type, entries in data.items():
+                    parsed[service_type] = {}
+                    for name, rng in entries.items():
+                        if isinstance(rng, str) and "-" in rng:
+                            start, end = map(int, rng.split("-", 1))
+                        elif isinstance(rng, (list, tuple)) and len(rng) == 2:
+                            start, end = map(int, rng)
+                        else:
+                            # bad format – skip
+                            continue
+                        parsed[service_type][name] = PortRange(start, end)
+
+                if parsed:
+                    return parsed
+            except Exception:
+                # Fall back to legacy dict below
+                pass
+
+        # Legacy hard-coded ranges (kept for backward compatibility)
+        return {
             'frontend': {
                 'react': PortRange(3000, 3999),
                 'vue': PortRange(4000, 4999)

@@ -473,13 +473,6 @@ class TemplateManager:
         for compose_file in compose_files:
             self._process_yaml_file(compose_file, variables, is_compose=True)
 
-        # Process any PHP template files
-        php_templates = list(project_dir.glob('**/*.template'))
-        for template_file in php_templates:
-            target_file = template_file.parent / \
-                template_file.name.replace('.template', '')
-            self._process_template_file(template_file, target_file, variables)
-
         # ------------------------------------------------------------------
         # Ensure a **single canonical** docker-compose.yml exists in the
         # generated project.
@@ -1194,28 +1187,6 @@ APP_DEBUG=true
             'db': '3306-3399',
             'admin': '8080-8099'
         }
-
-        # Check compose files for expected service names
-        # This is temporary until all templates are migrated to new format
-        template_services = []
-        for compose_file in self.templates_dir.glob('**/docker-compose*.yml'):
-            try:
-                with open(compose_file) as f:
-                    compose_data = yaml.safe_load(f)
-                    if compose_data and 'services' in compose_data:
-                        template_services.extend(
-                            compose_data['services'].keys())
-            except:
-                pass
-
-        # Add required service ports based on template services
-        if 'nginx' in template_services and 'web' not in port_mappings:
-            port = self._find_available_port('8000-8999', used_ports)
-            if port is None:
-                console.print(f"[red]Could not allocate port for nginx/web[/]")
-                return {}
-            port_mappings['web'] = port
-            used_ports.add(port)
 
         # Check welcome page for expected services
         welcome_sections = welcome_config.get('sections', [])
