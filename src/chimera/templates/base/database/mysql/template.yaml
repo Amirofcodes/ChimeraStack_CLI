@@ -9,6 +9,11 @@ component:
   engine: "mysql"
   version: "8.0"
 
+# Provide quick-access config used by the CLI for port allocation
+config:
+  port_range: "3306-3399"
+  env_prefix: "DB"
+
 # Service definitions for port allocation
 services:
   db:
@@ -48,3 +53,17 @@ docker:
     - type: "volume"
       name: "${PROJECT_NAME}_mysql"
       target: "/var/lib/mysql"
+
+# ----------------------------------------------------
+# Declarative cleanup tasks (executed only when MySQL engine is chosen)
+# ----------------------------------------------------
+post_copy:
+  # Remove directories belonging to other database engines if present
+  - remove_dir: "docker/mariadb"
+  - remove_dir: "docker/postgres"
+  - remove_dir: "docker/postgresql"
+
+  # Remove variant compose files that should not ship with a MySQL project
+  - remove: "docker-compose.mariadb.yml"
+  - remove: "docker-compose.postgresql.yml"
+  - remove: "docker-compose.pgsql.yml"
