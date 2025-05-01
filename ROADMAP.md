@@ -10,16 +10,27 @@ This roadmap outlines the planned evolution of the ChimeraStack CLI from v0.1.0 
 
 ### Tasks
 
-- [ ] Refactor templates into:
+- [x] Refactor templates into:
   - `frontend/`
   - `backend/`
   - `fullstack/`
-- [ ] Update `template.yaml` format:
+- [x] Update `template.yaml` format:
   - Add `category`, `tags`, `description`
-- [ ] Update `chimera list` command to support new structure
-- [ ] Update `chimera create` logic to support new categories
-- [ ] Add backward compatibility for legacy paths (temporary)
-- [ ] Update documentation and GitHub release
+- [x] Update `chimera list` command to support new structure
+- [x] Update `chimera create` logic to support new categories
+- [x] Add backward compatibility for legacy paths (temporary)
+- [x] Update documentation and GitHub release
+
+### Improvements & Fixes
+
+- [x] Fixed database connectivity issues in PHP templates with all database variants (MySQL, MariaDB, PostgreSQL)
+- [x] Improved environment variable handling for DB connections
+- [x] Fixed port mapping issues with database admin tools (phpMyAdmin/pgAdmin)
+- [x] Updated cleanup process to remove redundant docker-compose files
+- [x] Improved template file processing with proper variable substitution
+- [x] Enhanced README generation to be database-variant aware (MySQL/MariaDB/PostgreSQL)
+- [x] Added special PostgreSQL support for handling port-specific issues
+- [x] Fixed landing page templates to correctly show connection information
 
 ---
 
@@ -47,11 +58,10 @@ This roadmap outlines the planned evolution of the ChimeraStack CLI from v0.1.0 
 ### Tasks
 
 - [ ] Add `chimera init` with:
+
   ```bash
   chimera init my-app --frontend react --backend php --db mysql
   ```
-
-````
 
 - [ ] Add service-to-template mapping logic
 - [ ] Compose Docker Compose files from modular parts
@@ -75,7 +85,7 @@ This roadmap outlines the planned evolution of the ChimeraStack CLI from v0.1.0 
 
 ## 🧪 Optional Enhancements (Parallel or Future Work)
 
-- [ ] `chimera test template` command for verifying a template’s structure and health
+- [ ] `chimera test template` command for verifying a template's structure and health
 - [ ] `chimera update templates` to pull remote or latest templates
 - [ ] Template marketplace (public repo integration)
 - [ ] VSCode `.devcontainer` auto-generation
@@ -103,4 +113,7 @@ If you'd like to contribute to any part of this roadmap or suggest ideas, open a
 ```
 
 ```
-````
+
+```
+
+```
