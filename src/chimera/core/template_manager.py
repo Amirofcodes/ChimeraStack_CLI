@@ -10,6 +10,8 @@ from rich.console import Console
 from .port_scanner import PortScanner
 from .port_allocator import PortAllocator
 from .template_validator import validate_template, TemplateValidationError
+# New Jinja2-powered renderer
+from chimera.utils.render import render_string
 
 console = Console()
 
@@ -440,11 +442,15 @@ class TemplateManager:
 
     def _replace_path_variables(self, path: str, variables: dict) -> str:
         """Replace variables in path string with their values."""
-        result = path
-        for key, value in variables.items():
-            result = result.replace(f"${{{key}}}", value)
-            result = result.replace(f"${key}", value)
-        return result
+        try:
+            return render_string(path, variables)
+        except Exception:
+            # Fallback to naive replace if renderer fails (e.g. bad syntax)
+            result = path
+            for key, value in variables.items():
+                result = result.replace(f"${{{key}}}", str(value))
+                result = result.replace(f"${key}", str(value))
+            return result
 
     def _process_project_files(self, project_dir: Path, variables: dict) -> None:
         # First, try to process existing .env files
@@ -506,15 +512,9 @@ class TemplateManager:
         md_files = list(project_dir.glob('**/*.md'))
         for md_file in md_files:
             try:
-                with open(md_file, 'r') as f:
-                    content = f.read()
-
-                for key, value in variables.items():
-                    content = content.replace(f"${{{key}}}", str(value))
-                    content = content.replace(f"${key}", str(value))
-
-                with open(md_file, 'w') as f:
-                    f.write(content)
+                # Render markdown docs using Jinja2
+                rendered = render_string(md_file.read_text(), variables)
+                md_file.write_text(rendered)
 
                 self._verbose_print(
                     f"[green]✓[/] Updated documentation: {md_file.relative_to(project_dir)}")
@@ -1085,14 +1085,19 @@ APP_DEBUG=true
                             else:
                                 volume['name'] = f"{project_name}_{volume_base_name}"
 
-            # Replace variables
+            # Replace variables using the Jinja2 renderer (handles both `${VAR}` and `$VAR`)
             content_str = yaml.dump(content)
-            for key, value in variables.items():
-                content_str = content_str.replace(f"${{{key}}}", str(value))
-                content_str = content_str.replace(f"${key}", str(value))
+            try:
+                rendered = render_string(content_str, variables)
+            except Exception:
+                # In case of rendering error, keep original content and warn
+                console.print(
+                    f"[yellow]Warning:[/] Could not render variables in {file_path}. Keeping placeholders."
+                )
+                rendered = content_str
 
             with open(file_path, 'w') as f:
-                f.write(content_str)
+                f.write(rendered)
 
             self._verbose_print(f"[green]✓[/] Processed: {file_path}")
         except Exception as e:
@@ -1102,15 +1107,8 @@ APP_DEBUG=true
     def _process_env_file(self, src_path: Path, dest_path: Path, variables: dict) -> None:
         """Process environment file, replacing variables."""
         try:
-            with open(src_path) as f:
-                content = f.read()
-
-            for key, value in variables.items():
-                content = content.replace(f"${{{key}}}", str(value))
-                content = content.replace(f"${key}", str(value))
-
-            with open(dest_path, 'w') as f:
-                f.write(content)
+            rendered = render_string(src_path.read_text(), variables)
+            dest_path.write_text(rendered)
 
             self._verbose_print(
                 f"[green]✓[/] Environment file processed: {dest_path}")
@@ -1299,28 +1297,22 @@ APP_DEBUG=true
     def _process_template_file(self, template_file: Path, target_file: Path, variables: dict) -> None:
         """Process PHP template files and replace variables."""
         try:
-            with open(template_file) as f:
-                template_content = f.read()
-
-            # Replace variables in the template content
-            for key, value in variables.items():
-                template_content = template_content.replace(
-                    f"${{{key}}}", str(value))
-                template_content = template_content.replace(
-                    f"${key}", str(value))
+            template_content = template_file.read_text()
+            try:
+                rendered_content = render_string(template_content, variables)
+            except Exception:
+                rendered_content = template_content  # fallback
 
             # Special handling for PHP index.html templates with database information
             if template_file.name == 'index.html.template':
                 # Specifically fix PostgreSQL port references
                 if variables.get('DB_ENGINE') == 'postgresql':
                     # Ensure PGADMIN_PORT is used correctly
-                    if 'PGADMIN_PORT' in variables and 'localhost:8081' in template_content:
-                        template_content = template_content.replace(
+                    if 'PGADMIN_PORT' in variables and 'localhost:8081' in rendered_content:
+                        rendered_content = rendered_content.replace(
                             'localhost:8081', f'localhost:{variables["PGADMIN_PORT"]}')
 
-            # Write the processed content to the target file
-            with open(target_file, 'w') as f:
-                f.write(template_content)
+            target_file.write_text(rendered_content)
 
             self._verbose_print(
                 f"[green]✓[/] Processed template: {template_file} -> {target_file}")
