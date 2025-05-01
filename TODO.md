@@ -17,10 +17,10 @@
 
 ## 2. Rendering Pipeline
 
-- [ ] Introduce Jinja2 rendering helper (`utils/render.py`).
-- [ ] Migrate variable substitution from ad-hoc `str.replace` to Jinja2
+- [x] Introduce Jinja2 rendering helper (`utils/render.py`).
+- [x] Migrate variable substitution from ad-hoc `str.replace` to Jinja2
       (start with `README.md`, `.env`, then `docker-compose.yml`).
-- [ ] Remove legacy `_process_yaml_file`, `_process_template_file`
+- [x] Remove legacy `_process_yaml_file`, `_process_template_file`
       string-replace blocks once migration complete.
 
 ## 3. Docker-Compose Strategy
