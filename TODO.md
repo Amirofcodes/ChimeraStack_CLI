@@ -55,11 +55,33 @@
 
 ## 7. Tests & CI
 
-- [ ] Unit tests for `TemplateManager.create_project()` covering
+- [x] Unit tests for `TemplateManager.create_project()` covering
       each stack + variant.
-- [ ] Integration test: `chimera create temp-proj -t backend/php-web -v
+- [x] Integration test: `chimera create temp-proj -t backend/php-web -v
 postgresql` then `docker compose config` must be valid.
-- [ ] GitHub Actions job running tests + schema validation.
+- [x] GitHub Actions job running tests + schema validation.
+
+### Additional Test Coverage:
+
+1. Unit Tests:
+
+   - [ ] Test template validation
+   - [ ] Test port allocation edge cases
+   - [ ] Test cleanup mechanisms
+   - [ ] Test error handling scenarios
+
+2. Integration Tests:
+
+   - [ ] Test project creation with all variants
+   - [ ] Test custom configurations
+   - [ ] Test database initialization
+   - [ ] Test project cleanup
+
+3. CI Improvements:
+   - [ ] Add test coverage reporting
+   - [ ] Add linting checks (flake8, black)
+   - [ ] Add schema validation for all templates
+   - [ ] Add dependency security scanning
 
 ## 8. Developer Documentation
 

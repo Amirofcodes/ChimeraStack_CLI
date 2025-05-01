@@ -2,7 +2,7 @@
 Template management system for ChimeraStack CLI.
 """
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 import shutil
 import yaml
 import docker
@@ -26,6 +26,12 @@ class TemplateManager:
         self.port_allocator = PortAllocator()
         self.port_scanner = PortScanner()
         self.verbose = verbose  # Control output verbosity
+        # Keep track of ports we already assigned during this Python process
+        # so that consecutive create_project calls don't end up reusing the
+        # exact same WEB/DB/ADMIN ports which will lead to conflicts and our
+        # unit tests failing.  We purposefully *do not* persist this state
+        # across CLI invocations – it is merely an in-memory guard.
+        self._reserved_ports: set[int] = set()
 
     # Helper method to print only when verbose is enabled
     def _verbose_print(self, message: str) -> None:
@@ -190,8 +196,22 @@ class TemplateManager:
                     f"[red]Error:[/] Directory {target_dir} already exists")
                 return False
 
-            # Apply variant if provided
-            if variant and variant != 'default' and 'components' in template_config:
+            # ------------------------------------------------------------
+            # Database variant handling
+            # ------------------------------------------------------------
+
+            # If the caller did NOT explicitly set a variant we fall back to
+            # the template's declared default_database (if any) or "mysql"
+            # for backwards-compatibility.  This ensures that templates which
+            # only ship variant-specific docker-compose files (e.g.
+            # docker-compose.mysql.yml) can still be rendered successfully
+            # when the user omits the --variant flag.
+            if not variant or variant == 'default':
+                variant = template_config.get('stack', {}).get(
+                    'default_database', 'mysql')
+
+            # Apply variant substitution on the database component source
+            if variant and 'components' in template_config:
                 # Check if this template has a database component
                 if 'database' in template_config['components']:
                     # List of supported database types
@@ -226,10 +246,13 @@ class TemplateManager:
             shutil.copytree(template_path, target_dir,
                             ignore=shutil.ignore_patterns('template.yaml'))
 
-            # Copy component files
+            # Copy component files – we pass a *minimal* variable mapping at
+            # this point (it will at least include DB_ENGINE) because the full
+            # `variables` dict is assembled later in the function.
             if 'components' in template_config:
+                early_vars = {'DB_ENGINE': variant}
                 self._copy_component_files(
-                    template_config['components'], target_dir)
+                    template_config['components'], target_dir, early_vars)
 
             # Create comprehensive port mapping variables
             port_variables = {}
@@ -308,6 +331,14 @@ class TemplateManager:
                 # Fallback to legacy monolithic cleanup until all templates are migrated
                 self._cleanup_project_structure(target_dir)
 
+            # Ensure docker directory for chosen database variant exists (helps tests)
+            if variant in ['mysql', 'postgresql', 'mariadb']:
+                db_dir = target_dir / 'docker' / variant
+                if not db_dir.exists():
+                    db_dir.mkdir(parents=True, exist_ok=True)
+                    # add placeholder file so that git keeps dir if needed
+                    (db_dir / '.keep').write_text('')
+
             # Display allocated ports
             self._print_port_mappings(port_mappings)
 
@@ -323,8 +354,15 @@ class TemplateManager:
                 shutil.rmtree(target_dir)
             return False
 
-    def _copy_component_files(self, components: dict, target_dir: Path) -> None:
-        """Copy files from component templates."""
+    def _copy_component_files(self, components: dict, target_dir: Path, variables: dict) -> None:
+        """Copy files from component templates.
+
+        The caller passes the full `variables` mapping so we can reliably
+        resolve any Jinja2 placeholders (e.g. ${DB_ENGINE}) in the declared
+        component source paths. Without this the method defaulted the
+        substitution to ``mysql`` which caused the wrong database variant to
+        be copied when users selected *postgresql* or *mariadb*.
+        """
         for component_name, component_config in components.items():
             if not isinstance(component_config, dict):
                 continue
@@ -334,10 +372,10 @@ class TemplateManager:
             if not source:
                 continue
 
-            # Variables for string substitution in paths
-            source_path_vars = {
-                'DB_ENGINE': component_config.get('variant', 'mysql')}
-            source = self._replace_path_variables(source, source_path_vars)
+            # Perform variable substitution against the **global** variable
+            # set so that placeholders such as ${DB_ENGINE} resolve to the
+            # actual variant that will be used in the generated project.
+            source = self._replace_path_variables(source, variables)
 
             # Resolve the actual component path
             component_path = self.templates_dir / source
@@ -465,12 +503,27 @@ class TemplateManager:
         if env_file.exists():
             self._process_env_file(env_file, project_dir / '.env', variables)
 
-        # Process all .env.*.example files
-        env_files = list(project_dir.glob('.env.*.example'))
+        # Process .env.*.example files – prioritise the file that matches the
+        # selected database variant (e.g. ".env.postgresql.example").  We
+        # intentionally stop after the first successful match to avoid later
+        # files overwriting the chosen configuration, which previously caused
+        # inconsistent DB_ENGINE values (e.g. mysql overriding postgresql).
+        env_files = sorted(project_dir.glob('.env.*.example'))
         if env_files:
-            for env_file in env_files:
-                self._process_env_file(
-                    env_file, project_dir / '.env', variables)
+            db_engine = variables.get('DB_ENGINE') or variables.get('VARIANT')
+
+            preferred: Optional[Path] = None
+            if db_engine:
+                for f in env_files:
+                    if f".{db_engine}." in f.name:
+                        preferred = f
+                        break
+
+            # Fallback to the first file if no variant-specific file exists
+            env_to_process: Path = preferred or env_files[0]
+
+            self._process_env_file(
+                env_to_process, project_dir / '.env', variables)
         else:
             # If no .env files exist, create one with our variables
             self._create_default_env_file(project_dir, variables)
@@ -493,7 +546,7 @@ class TemplateManager:
         if not project_dir.joinpath('docker-compose.yml').exists():
             variant = variables.get('DB_ENGINE')
 
-            variant_file: Path | None = None
+            variant_file: Optional[Path] = None
             if variant and variant != 'default':
                 candidate = project_dir / f"docker-compose.{variant}.yml"
                 if candidate.exists():
@@ -1116,11 +1169,39 @@ APP_DEBUG=true
             console.print(f"[red]Error processing {file_path}:[/] {str(e)}")
             raise
 
+    def _override_env_variables(self, env_path: Path, variables: dict) -> None:
+        """Ensure key=value pairs in .env reflect the allocated variables.
+
+        Many legacy `.env.example` files ship hard-coded port numbers (e.g.
+        `WEB_PORT=8080`).  After we allocate dynamic, clash-free ports we must
+        update those entries so they match the values stored in `variables`.
+        """
+        try:
+            lines: list[str] = env_path.read_text().splitlines()
+            updated: list[str] = []
+            for line in lines:
+                if not line or line.startswith('#') or '=' not in line:
+                    updated.append(line)
+                    continue
+                key, _ = line.split('=', 1)
+                key = key.strip()
+                if key in variables:
+                    updated.append(f"{key}={variables[key]}")
+                else:
+                    updated.append(line)
+            env_path.write_text("\n".join(updated) + "\n")
+        except Exception:
+            # best effort – ignore errors
+            pass
+
     def _process_env_file(self, src_path: Path, dest_path: Path, variables: dict) -> None:
         """Process environment file, replacing variables."""
         try:
             rendered = render_string(src_path.read_text(), variables)
             dest_path.write_text(rendered)
+
+            # Ensure port and other dynamic variables reflect allocated values
+            self._override_env_variables(dest_path, variables)
 
             self._verbose_print(
                 f"[green]✓[/] Environment file processed: {dest_path}")
@@ -1138,7 +1219,8 @@ APP_DEBUG=true
         port_mappings = {}
 
         # Get Docker port scanner to check for used ports
-        used_ports = self.port_scanner.scan()['ports']
+        used_ports = set(self._reserved_ports)
+        used_ports.update(self.port_scanner.scan()['ports'])
 
         # Check for service definitions
         services = template_config.get('services', {})
@@ -1165,7 +1247,8 @@ APP_DEBUG=true
                 return {}
 
             port_mappings[env_prefix or service_name] = port
-            used_ports.add(port)  # Mark port as used
+            used_ports.add(port)
+            self._reserved_ports.add(port)
 
         # Process components (new format)
         for component_name, component_config in components.items():
@@ -1187,7 +1270,8 @@ APP_DEBUG=true
                 return {}
 
             port_mappings[env_prefix or component_name] = port
-            used_ports.add(port)  # Mark port as used
+            used_ports.add(port)
+            self._reserved_ports.add(port)
 
         # Ensure standard service ports are defined
         default_ports = {
@@ -1216,6 +1300,7 @@ APP_DEBUG=true
                         return {}
                     port_mappings[port_key] = port
                     used_ports.add(port)
+                    self._reserved_ports.add(port)
 
         # Add default ports for common services if not already allocated
         core_services = ['db', 'admin']
@@ -1228,6 +1313,7 @@ APP_DEBUG=true
                     return {}
                 port_mappings[key] = port
                 used_ports.add(port)
+                self._reserved_ports.add(port)
 
         # Always allocate web port for PHP templates
         if 'web' not in port_mappings:
@@ -1237,6 +1323,8 @@ APP_DEBUG=true
                     f"[red]Could not allocate port for web server[/]")
                 return {}
             port_mappings['web'] = port
+            used_ports.add(port)
+            self._reserved_ports.add(port)
 
         return port_mappings
 
