@@ -1,0 +1,47 @@
+name: "PostgreSQL Database"
+version: "1.0.0"
+description: "PostgreSQL database server"
+type: "component"
+
+# Component-specific configuration
+component:
+  type: "database"
+  engine: "postgresql"
+  version: "15"
+
+# Service definitions for port allocation
+services:
+  db:
+    type: "postgresql"
+    port_range: "5432-5632"
+    required: true
+    env_prefix: "DB" # Will create DB_PORT
+    postgresql:
+      port: "${DB_PORT}"
+      database: "${DB_DATABASE}"
+      user: "${DB_USERNAME}"
+      password: "${DB_PASSWORD}"
+
+# Environment variables this component needs
+environment:
+  DB_DATABASE: "${PROJECT_NAME}"
+  DB_USERNAME: "${PROJECT_NAME}"
+  DB_PASSWORD: "secret"
+  POSTGRES_VERSION: "15"
+
+# Files that need variable substitution
+files:
+  - path: ".env"
+    variables:
+      - DB_PORT
+      - DB_DATABASE
+      - DB_USERNAME
+      - DB_PASSWORD
+
+# Docker configuration
+docker:
+  image: "postgres:${POSTGRES_VERSION}-alpine"
+  volumes:
+    - type: "volume"
+      name: "${PROJECT_NAME}_postgres"
+      target: "/var/lib/postgresql/data"

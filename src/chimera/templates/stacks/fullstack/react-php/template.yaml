@@ -97,17 +97,8 @@ services:
 
 # Files to be generated/processed
 files:
-  - source: "docker-compose.yml"
+  - source: "docker-compose.${DB_ENGINE}.yml"
     target: "docker-compose.yml"
-  - source: "docker-compose.mysql.override.yml"
-    target: "docker-compose.override.yml"
-    variant: "mysql"
-  - source: "docker-compose.mariadb.override.yml"
-    target: "docker-compose.override.yml"
-    variant: "mariadb"
-  - source: "docker-compose.postgresql.override.yml"
-    target: "docker-compose.override.yml"
-    variant: "postgresql"
   - source: "backend/bootstrap.php"
     target: "backend/bootstrap.php"
   - source: "README.md"

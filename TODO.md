@@ -76,3 +76,15 @@ postgresql` then `docker compose config` must be valid.
 
 _Once all boxes above are checked we can confidently move on to v0.3.0
 plugin system work without legacy friction._
+
+## 9. House-keeping after §1-3 refactor (added later)
+
+- [ ] Trim unused `docker-compose.*.yml` files after project generation so a
+      created project only contains the canonical variant file it actually
+      uses.
+- [ ] Inject `ADMIN_PORT` into the PHP service environment so the welcome page
+      can display the correct DB-admin link without triggering
+      `htmlspecialchars(false)`.
+- [ ] Add a small retry/back-off loop (or delayed attempt) in
+      `src/pages/home.php` before the first DB connection to avoid transient
+      _SQLSTATE[HY000] [2002] Connection refused_ on fresh `docker-compose up`.
