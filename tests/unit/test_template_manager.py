@@ -242,8 +242,10 @@ WEB_PORT=8080
         # Create docker directory structure for the stack
         stack_docker_dir = stack_dir / "docker" / db
         stack_docker_dir.mkdir(parents=True)
-        shutil.copy2(docker_dir / "config.cnf",
-                     stack_docker_dir / "config.cnf")
+        shutil.copy2(
+            docker_dir / "config.cnf",
+            stack_docker_dir / "config.cnf"
+        )
 
     return TemplateManager(templates_dir=templates_dir)
 
