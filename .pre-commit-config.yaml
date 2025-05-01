@@ -22,3 +22,13 @@ repos:
           - pyyaml>=6.0
           - rich>=13.0
           - jsonschema>=4.20
+
+  # Run fast unit test suite before commit (skip integration)
+  - repo: local
+    hooks:
+      - id: unit-tests
+        name: "Run unit test suite (no integration)"
+        entry: pytest -m "not integration" -q
+        language: system
+        pass_filenames: false
+        stages: [manual]

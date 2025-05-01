@@ -173,3 +173,5 @@ cython_debug/
 codebase.md
 .aidigestignore
 gitloghistory.txt
+
+tests/__pycache__/
