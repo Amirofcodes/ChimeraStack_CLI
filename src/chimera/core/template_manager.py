@@ -301,6 +301,13 @@ class TemplateManager:
             # Process files
             self._process_project_files(target_dir, variables)
 
+            # Execute declarative post-copy cleanup tasks (new mechanism)
+            tasks_executed = self._run_post_copy_tasks(
+                template_config, target_dir, variables)
+            if not tasks_executed:
+                # Fallback to legacy monolithic cleanup until all templates are migrated
+                self._cleanup_project_structure(target_dir)
+
             # Display allocated ports
             self._print_port_mappings(port_mappings)
 
@@ -604,11 +611,13 @@ switch ($uri) {
                 console.print(
                     f"[yellow]Warning: Could not update Nginx configuration: {str(e)}[/]")
 
-        # Clean up redundant files and directories
-        self._cleanup_project_structure(project_dir)
-
     def _cleanup_project_structure(self, project_dir: Path) -> None:
-        """Remove redundant files and directories to create a cleaner project structure."""
+        """Remove redundant files and directories to create a cleaner project structure.
+
+        DEPRECATED: This monolithic function is being phased out in favour of
+        declarative `post_copy` tasks declared per component/stack. It will be
+        removed after all templates have migrated. Do not add new logic here.
+        """
         try:
             # Get the DB_ENGINE from the .env file if it exists
             db_engine = None
@@ -1327,3 +1336,123 @@ APP_DEBUG=true
         except Exception as e:
             console.print(f"[red]Error processing PHP template: {str(e)}")
             raise
+
+    def _run_post_copy_tasks(self, template_config: dict, project_dir: Path, variables: dict) -> bool:
+        """Execute declarative post-copy tasks defined in template.yaml files.
+
+        The new cleanup mechanism allows each stack or component to declare a
+        `post_copy` list where every item describes a single idempotent task
+        performed right after the template has been rendered/copied. Supported
+        task types:
+
+        - {"remove": "path/to/file"}
+        - {"remove_dir": "path/to/dir"}
+        - {"rename": {"from": "old", "to": "new"}}
+        - {"patch_file": {"path": "file", "replace": "foo", "with": "bar"}}
+
+        All paths are interpreted relative to the generated project root and
+        rendered through the same Jinja2 renderer so they may reference
+        variables such as `${DB_ENGINE}` or `${PROJECT_NAME}`.
+        """
+        tasks: list[dict] = []
+
+        # Helper to gather tasks from a config dict
+        def collect(cfg: dict):
+            if not isinstance(cfg, dict):
+                return
+            post = cfg.get("post_copy", [])
+            if isinstance(post, list):
+                tasks.extend(post)
+
+        # Collect tasks from the root stack template
+        collect(template_config)
+        # Collect tasks from components
+        for comp_name, comp in template_config.get("components", {}).items():
+            if isinstance(comp, dict):
+                collect(comp)
+                # Also attempt to load the component's own template.yaml
+                src = comp.get("source")
+                if src:
+                    comp_path = self.templates_dir / \
+                        render_string(src, variables)
+                    comp_tmpl = comp_path / "template.yaml"
+                    if comp_tmpl.exists():
+                        try:
+                            with open(comp_tmpl) as f:
+                                comp_cfg = yaml.safe_load(f)
+                            collect(comp_cfg)
+                        except Exception:
+                            pass
+            else:
+                # Component declaration is a simple string – load its template.yaml
+                comp_path = self.templates_dir / \
+                    render_string(str(comp), variables)
+                comp_tmpl = comp_path / "template.yaml"
+                if comp_tmpl.exists():
+                    try:
+                        with open(comp_tmpl) as f:
+                            comp_cfg = yaml.safe_load(f)
+                        collect(comp_cfg)
+                    except Exception:
+                        pass
+
+        if not tasks:
+            return False  # Nothing to do – fall back to legacy cleanup
+
+        for task in tasks:
+            try:
+                # Render entire task dict (strings only) through Jinja2
+                def render_value(val):
+                    if isinstance(val, str):
+                        return render_string(val, variables)
+                    elif isinstance(val, dict):
+                        return {k: render_value(v) for k, v in val.items()}
+                    else:
+                        return val
+
+                task = render_value(task)
+
+                if "remove" in task:
+                    rel_path = Path(task["remove"])
+                    target = project_dir / rel_path
+                    if target.exists():
+                        target.unlink()
+                        self._verbose_print(
+                            f"[green]✓[/] Removed file via post_copy: {rel_path}")
+                elif "remove_dir" in task:
+                    rel_path = Path(task["remove_dir"])
+                    target = project_dir / rel_path
+                    if target.exists():
+                        shutil.rmtree(target)
+                        self._verbose_print(
+                            f"[green]✓[/] Removed directory via post_copy: {rel_path}")
+                elif "rename" in task and isinstance(task["rename"], dict):
+                    src_rel = Path(task["rename"].get("from"))
+                    dst_rel = Path(task["rename"].get("to"))
+                    src = project_dir / src_rel
+                    dst = project_dir / dst_rel
+                    if src.exists():
+                        dst.parent.mkdir(parents=True, exist_ok=True)
+                        src.rename(dst)
+                        self._verbose_print(
+                            f"[green]✓[/] Renamed {src_rel} → {dst_rel}")
+                elif "patch_file" in task and isinstance(task["patch_file"], dict):
+                    patch = task["patch_file"]
+                    file_rel = Path(patch.get("path", ""))
+                    replace = patch.get("replace", "")
+                    with_text = patch.get("with", "")
+                    target = project_dir / file_rel
+                    if target.exists():
+                        content = target.read_text()
+                        if replace in content:
+                            content = content.replace(replace, with_text)
+                            target.write_text(content)
+                            self._verbose_print(
+                                f"[green]✓[/] Patched {file_rel}")
+                else:
+                    console.print(
+                        f"[yellow]Unknown post_copy task ignored:[/] {task}")
+            except Exception as e:
+                console.print(
+                    f"[yellow]Warning:[/] post_copy task failed ({task}): {e}")
+        return True

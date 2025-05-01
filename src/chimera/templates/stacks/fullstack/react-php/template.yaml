@@ -119,3 +119,27 @@ post_create:
     command: "npm install axios"
   - working_dir: "backend"
     command: "composer install || echo 'Skipping composer install'"
+
+# ------------------------------------------------------------------
+# Declarative cleanup (v0.3)
+# ------------------------------------------------------------------
+post_copy:
+  # Remove variant compose files we don't need
+  - remove: "docker-compose.mysql.yml"
+  - remove: "docker-compose.mariadb.yml"
+  - remove: "docker-compose.postgresql.yml"
+
+  # Delete empty database/ directory (each variant copies only needed files)
+  - remove_dir: "database"
+
+  # Ensure Nginx or backend config uses public directory
+  - patch_file:
+      path: "docker/nginx/conf.d/default.conf"
+      replace: "root /var/www/html;"
+      with: "root /var/www/html/public;"
+
+  # Remove legacy .base compose file if exists
+  - remove: "docker-compose.base.yml"
+
+  # Delete obsolete www directory copied from backend component
+  - remove_dir: "www"

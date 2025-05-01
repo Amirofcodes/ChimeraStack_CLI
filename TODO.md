@@ -42,9 +42,9 @@
 
 ## 5. Cleanup Mechanism
 
-- [ ] Replace monolithic `_cleanup_project_structure()` with
+- [x] Replace monolithic `_cleanup_project_structure()` with
       per-component `post_copy` tasks declared in `template.yaml`.
-- [ ] Provide helper that executes these tasks after copy.
+- [x] Provide helper that executes these tasks after copy.
 
 ## 6. Directory / Naming Conventions
 
@@ -90,3 +90,10 @@ plugin system work without legacy friction._
 - [ ] Add a small retry/back-off loop (or delayed attempt) in
       `src/pages/home.php` before the first DB connection to avoid transient
       _SQLSTATE[HY000] [2002] Connection refused_ on fresh `docker-compose up`.
+
+# 10. Noise-reduction follow-ups
+
+- [ ] Silence placeholder-render warnings by executing `post_copy` **before** the YAML-processing pass or by narrowing the compose-file glob to only the canonical `docker-compose.yml`.
+- [ ] Delete empty `config/` directories via stack/component `post_copy` once no longer needed.
+
+_SQLSTATE[HY000] [2002] Connection refused_ on fresh `docker-compose up`.
