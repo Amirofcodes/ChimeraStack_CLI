@@ -159,8 +159,12 @@ def template_manager(tmp_path):
                         "POSTGRES_PASSWORD": "${DB_PASSWORD}" if db == "postgresql" else None,
                         "MARIADB_DATABASE": "${DB_DATABASE}" if db == "mariadb" else None,
                         "MARIADB_USER": "${DB_USERNAME}" if db == "mariadb" else None,
-                        "MARIADB_PASSWORD": "${DB_PASSWORD}" if db == "mariadb" else None,
-                        "MARIADB_ROOT_PASSWORD": "${DB_ROOT_PASSWORD}" if db == "mariadb" else None
+                        "MARIADB_PASSWORD": (
+                            "${DB_PASSWORD}" if db == "mariadb" else None
+                        ),
+                        "MARIADB_ROOT_PASSWORD": (
+                            "${DB_ROOT_PASSWORD}" if db == "mariadb" else None
+                        ),
                     }
                 }
             }
@@ -168,7 +172,9 @@ def template_manager(tmp_path):
 
         # Remove None values from environment
         db_compose["services"][db]["environment"] = {
-            k: v for k, v in db_compose["services"][db]["environment"].items() if v is not None
+            k: v
+            for k, v in db_compose["services"][db]["environment"].items()
+            if v is not None
         }
 
         with open(db_dir / "docker-compose.yml", "w") as f:
