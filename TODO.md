@@ -48,9 +48,9 @@
 
 ## 6. Directory / Naming Conventions
 
-- [ ] Ensure all stacks & components use kebab-case IDs.
-- [ ] Standardise variant files naming (`mysql`, `mariadb`, `postgresql`).
-- [ ] Remove stray `.override` and `.base` files after new pipeline is
+- [x] Ensure all stacks & components use kebab-case IDs (verified and enforced).
+- [x] Standardise variant files naming (`mysql`, `mariadb`, `postgresql`).
+- [x] Remove stray `.override` and `.base` files after new pipeline is
       in place.
 
 ## 7. Tests & CI

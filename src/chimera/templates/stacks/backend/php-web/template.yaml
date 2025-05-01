@@ -82,7 +82,6 @@ services:
 
 # Docker Compose template selection
 compose:
-  base: "docker-compose.base.yml" # Contains welcome + php-fpm setup
   variants:
     mysql: "docker-compose.mysql.yml"
     postgresql: "docker-compose.postgresql.yml"
@@ -115,7 +114,6 @@ post_copy:
   - remove: "docker-compose.mysql.yml"
   - remove: "docker-compose.postgresql.yml"
   - remove: "docker-compose.mariadb.yml"
-  - remove: "docker-compose.base.yml"
 
   # Remove legacy override files should they exist
   - remove: "docker-compose.mysql.override.yml"
