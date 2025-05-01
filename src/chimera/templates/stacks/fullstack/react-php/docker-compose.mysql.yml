@@ -1,4 +1,4 @@
--- -version: '3.8'
+version: '3.8'
 
 services:
   # Frontend React development server
@@ -17,7 +17,6 @@ services:
     networks:
       - ${PROJECT_NAME}_network
     depends_on:
-      - nginx
       - backend
 
   # Backend PHP-FPM service
