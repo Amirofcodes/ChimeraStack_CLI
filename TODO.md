@@ -85,7 +85,7 @@ postgresql` then `docker compose config` must be valid.
 
 ## 8. Developer Documentation
 
-- [ ] `docs/templates.md`: how to author a component/stack.
+- [x] `docs/authoring-templates.md`: how to author a component/stack.
 - [ ] Update `README.md` with new contribution guidelines.
 
 ---
