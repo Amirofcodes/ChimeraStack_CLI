@@ -86,7 +86,7 @@ postgresql` then `docker compose config` must be valid.
 ## 8. Developer Documentation
 
 - [x] `docs/authoring-templates.md`: how to author a component/stack.
-- [ ] Update `README.md` with new contribution guidelines.
+- [x] Update `README.md` with new contribution guidelines.
 
 ---
 
@@ -119,3 +119,32 @@ plugin system work without legacy friction._
 - [ ] Delete empty `config/` directories via stack/component `post_copy` once no longer needed.
 
 _SQLSTATE[HY000] [2002] Connection refused_ on fresh `docker-compose up`.
+
+## 11. Release v0.2.0 Checklist
+
+### Local (release/v0.2.0 branch)
+
+- [ ] Bump version to `0.2.0` in `src/chimera/__init__.py`, `setup.py`, and `pyproject.toml`.
+- [ ] Search & replace hard-coded version strings in docs/CLI banners.
+- [ ] Add `## [v0.2.0] – YYYY-MM-DD` to `CHANGELOG.md`.
+- [ ] `pre-commit run --all-files`, `pytest`, `mypy src/` → green.
+- [ ] `pipx install .` then `chimera --version` & `chimera list` show 0.2.0.
+- [ ] `python -m build` → wheel + sdist, run `twine check`.
+- [ ] `./build_executables.sh` for macOS/Linux; generate checksums.
+- [ ] `git commit -m "chore(release): prepare v0.2.0"` and tag `v0.2.0`.
+
+### Remote (GitHub main)
+
+- [ ] Push branch & tag; open PR → merge after CI passes.
+- [ ] Release workflow builds artefacts & uploads.
+- [ ] Draft GitHub Release from tag, attach binaries & `CHANGELOG` notes.
+- [ ] Publish to PyPI via `pypa/gh-action-pypi-publish`.
+- [ ] Update Homebrew/Scoop manifests with new SHA/URL.
+- [ ] Verify public install: `pipx install chimera-stack-cli==0.2.0` prints correct version.
+- [ ] Announce release (tweet, Discord, etc.).
+
+## 12. Optional Hardening Tasks (post-0.2.0)
+
+- [ ] Audit all stack `template.yaml` files – ensure each declares a `README.md` in its `files:` block (`grep -R "files:" src/chimera/templates/stacks | …`).
+- [ ] Refactor `TemplateManager._create_readme()` so it executes **after** `post_copy` tasks when a README is still missing (safety-net fallback).
+- [ ] Ensure each template's `welcome_page.sections` covers every exposed service so the CLI summary prints correct ports.

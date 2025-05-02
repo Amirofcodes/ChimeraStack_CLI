@@ -135,6 +135,9 @@ Looking to **build or extend templates**? We moved the full authoring guide to:
 
 That document covers schema, best-practices and publishing workflow.
 
+👉 **Important**: Be sure to declare a `welcome_page.sections` entry for **every exposed service/port** (e.g. `web`, `db`, `admin`, `frontend`).
+The CLI uses these sections to print the dynamic "Port Allocations / Next steps / Access your environment" summary after `chimera create`.
+
 ## Commit Guidelines
 
 We follow semantic versioning for commits:
