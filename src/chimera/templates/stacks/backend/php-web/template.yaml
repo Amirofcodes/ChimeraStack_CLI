@@ -95,6 +95,8 @@ files:
     target: ".env"
   - source: "www/index.html.template"
     target: "www/index.html"
+  - source: "README.md"
+    target: "README.md"
 
 # Network configuration
 network:

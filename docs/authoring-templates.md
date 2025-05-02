@@ -86,6 +86,8 @@ See the **example** under `templates/template.yaml.example`.
    - `{{ ports.admin }}` – admin tool port
    - `{{ project_name }}` – directory name chosen by the user
 
+> ℹ️ **CLI summary** – The `welcome_page` section drives the dynamic output shown after `chimera create` (Port Allocations, Next steps, Access URLs). Declare a section for each public-facing service so the ports are printed correctly.
+
 ---
 
 ## 5. `post_copy` Tasks
