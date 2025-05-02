@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="chimera-stack-cli",
-    version="0.2.1",
+    version="0.2.2",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
@@ -18,6 +18,7 @@ setup(
         "rich>=13.0.0",
         "questionary>=2.0.0",
         "jsonschema>=4.0.0",
+        "jinja2>=3.0.0",
     ],
     entry_points={
         "console_scripts": [
