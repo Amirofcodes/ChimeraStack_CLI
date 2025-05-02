@@ -97,7 +97,7 @@ Your containers are accessible on dynamically allocated ports printed by the CLI
 
 ---
 
-## 🎨 Template Gallery _(v0.2)_
+## 🎨 Template Gallery _(v0.2.2)_
 
 | Category      | Templates                                                   |
 | ------------- | ----------------------------------------------------------- |
