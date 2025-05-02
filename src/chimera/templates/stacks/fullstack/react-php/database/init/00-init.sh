@@ -23,4 +23,4 @@ else
 fi
 
 # Make this script delete itself after execution to avoid it being run multiple times
-rm -f "$0" 
+rm -f "$0"

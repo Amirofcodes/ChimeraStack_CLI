@@ -46,4 +46,4 @@ environment:                              # Optional: Default environment variab
 post_create:                              # Optional: Commands to run after creation
   - "npm install"
   - "composer install"
-  - "php artisan key:generate" 
+  - "php artisan key:generate"

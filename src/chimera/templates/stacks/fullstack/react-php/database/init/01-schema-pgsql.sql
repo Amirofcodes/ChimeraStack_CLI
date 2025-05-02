@@ -30,4 +30,4 @@ INSERT INTO users (name, email, password) VALUES
 INSERT INTO posts (user_id, title, content) VALUES
     (1, 'Getting Started with React', 'React is a JavaScript library for building user interfaces...'),
     (1, 'PHP 8.2 Features', 'PHP 8.2 brings several new features including...'),
-    (2, 'Docker Compose Basics', 'Docker Compose is a tool for defining multi-container applications...'); 
+    (2, 'Docker Compose Basics', 'Docker Compose is a tool for defining multi-container applications...');
