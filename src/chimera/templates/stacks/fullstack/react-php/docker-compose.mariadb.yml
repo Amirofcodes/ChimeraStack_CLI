@@ -97,4 +97,4 @@ networks:
 
 volumes:
   mariadb_data:
-    name: ${PROJECT_NAME}_mariadb 
+    name: ${PROJECT_NAME}_mariadb

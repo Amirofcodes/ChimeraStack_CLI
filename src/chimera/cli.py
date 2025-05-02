@@ -40,7 +40,7 @@ class CustomGroup(click.Group):
  ║                        by Amirofcodes                                  ║
  ║                                                                        ║
  ╚════════════════════════════════════════════════════════════════════════╝
- 
+
 ChimeraStack CLI v{0} - Copyright © {1}
 
 {2}

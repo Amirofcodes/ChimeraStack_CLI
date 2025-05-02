@@ -2,7 +2,7 @@
 
 /**
  * Simple API for the React-PHP Fullstack Template
- * 
+ *
  * This file provides endpoints to access user and post data.
  */
 
