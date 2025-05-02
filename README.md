@@ -1,282 +1,160 @@
 # ChimeraStack CLI
 
-A powerful development environment manager that helps you quickly set up and manage local development environments using pre-configured templates.
+> 🐉 **One command to launch a production-ready development stack.**
+>
+> Skip the boilerplate, focus on code.
 
-## Features
-
-- 🚀 Zero-configuration development environments
-- 🔄 Dynamic port allocation
-- 📦 Pre-configured templates for various stacks
-- 🛠️ Customizable and extensible
-- 🔌 Plugin system (coming soon)
-
-## Installation
-
-```bash
-pip install chimera-cli
-```
-
-## Usage
-
-### Create a New Project
-
-```bash
-# Interactive mode
-chimera create my-project
-
-# Using a specific template
-chimera create my-project -t backend/php/nginx-mysql
-```
-
-### List Available Templates
-
-```bash
-# List all templates
-chimera list
-
-# Search templates
-chimera list -s mysql
-
-# List templates by category
-chimera list -c backend
-```
-
-## Template Categories
-
-Templates are organized into the following categories:
-
-### Frontend Templates
-
-- React applications
-- Vue.js applications
-- Angular applications
-- Static sites
-
-### Backend Templates
-
-- PHP/MySQL stacks
-- Python/PostgreSQL stacks
-- Node.js/MongoDB stacks
-- Ruby on Rails setups
-
-### Fullstack Templates
-
-- MERN stack (MongoDB, Express, React, Node.js)
-- LAMP stack (Linux, Apache, MySQL, PHP)
-- React + PHP + MySQL
-- Vue.js + Python + PostgreSQL
-
-## Template Structure
-
-Templates are organized in a hierarchical structure:
-
-```
-templates/
-├── base/
-│   ├── core/
-│   │   └── welcome/          # Common welcome page
-│   ├── backend/
-│   │   └── php/             # PHP-FPM configuration
-│   └── database/
-│       ├── mysql/           # MySQL configuration
-│       ├── postgresql/      # PostgreSQL configuration
-│       └── mariadb/         # MariaDB configuration
-└── stacks/
-    └── backend/
-        └── php-web/         # PHP web stack with DB choice
-            ├── docker-compose.base.yml
-            ├── docker-compose.mysql.yml
-            ├── docker-compose.postgresql.yml
-            └── docker-compose.mariadb.yml
-```
-
-### Template Configuration
-
-Each template must include a `template.yaml` file that defines its configuration. Here's an example:
-
-```yaml
-name: "PHP MySQL Development"
-version: "1.0.0"
-description: "PHP development environment with MySQL database"
-
-tags:
-  - php
-  - mysql
-  - development
-
-services:
-  web:
-    port_range: "8000-8999"
-  db:
-    port_range: "3306-3399"
-# See template.yaml.example for full configuration options
-```
-
-For a complete example of template configuration, see `templates/template.yaml.example`.
-
-## Contributing
-
-We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+[![PyPI](https://img.shields.io/pypi/v/chimera-stack-cli)](https://pypi.org/project/chimera-stack-cli)
+[![CI](https://github.com/Amirofcodes/ChimeraStack_CLI/actions/workflows/ci.yml/badge.svg)](https://github.com/Amirofcodes/ChimeraStack_CLI/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## 🚀 Why ChimeraStack?
+## 📚 Table of Contents
 
-Whether you're building APIs, fullstack apps, or just want a production-ready local dev environment, ChimeraStack gives you:
-
-- ✅ Smart dynamic port allocation (run many projects at once)
-- ✅ Fully containerized
-- ✅ Ready-to-use templates: React, PHP, MySQL, PostgreSQL, and more comming
-- ✅ CLI simplicity + growing web integration
-- ✅ Plugin-ready, modular architecture (coming soon)
-
----
-
-## 🧩 Project Structure
-
-ChimeraStack CLI is part of the **ChimeraStack ecosystem**, which includes:
-
-- **CLI Tool**: Generate, run, and extend dev environments from your terminal
-- **Web Platform**: [chimerastack.com](https://www.chimerastack.com)
-  - Browse templates
-  - Download CLI
-  - Manage downloads
-  - Support the project
+1. [Why ChimeraStack?](#-why-chimerastack)
+2. [TL;DR Quick Demo](#-tldr-quick-demo)
+3. [Key Features](#-key-features)
+4. [Installation](#-installation)
+5. [Creating Your First Project](#-creating-your-first-project)
+6. [Template Gallery](#-template-gallery)
+7. [How It Works](#-how-it-works)
+8. [Authoring Custom Templates](#-authoring-custom-templates)
+9. [Roadmap](#-roadmap)
+10. [Contributing](#-contributing)
+11. [License](#-license)
 
 ---
 
-## 🛠️ Prerequisites
+## ❓ Why ChimeraStack?
 
-- Python 3.8+
-- Docker and Docker Compose installed and running
-- `pip` (Python package manager)
-
----
-
-## ✨ Features
-
-### ✅ Template-Based Environment Creation
-
-- Create projects from pre-defined, production-ready stacks
-
-### 🔄 Dynamic Port Allocation
-
-- Avoid port conflicts by auto-assigning based on service type:
-  - Frontend (React): `3000–3999`
-  - Backend (PHP/Node): `8000–8999`
-  - MySQL: `3300–3399`
-  - PostgreSQL: `5432–5632`
-  - MariaDB: `3400–3499`
-  - Admin tools: `8081+`
-
-### 📦 Available Stacks (v0.1.0)
-
-- PHP/Nginx with:
-  - MySQL
-  - PostgreSQL
-  - MariaDB
-- React + PHP Fullstack (with MySQL)
+| Persona                 | Pain Points                                                         | How ChimeraStack Helps                                                                          |
+| ----------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Beginners**           | Confusing Docker setup, port clashes, missing environment variables | `chimera create blog -t fullstack/react-php` → ready-to-run project with sensible defaults      |
+| **Students / Teachers** | Need consistent environments on many machines                       | Project templates ensure everyone runs identical containers and ports                           |
+| **Senior Devs**         | Tiring to maintain many local micro-services                        | Dynamic port allocator + compose fragments = run multiple stacks side-by-side without conflicts |
 
 ---
 
-## ⚡ Quick Start
-
-### Install ChimeraStack CLI
-
-#### Option 1: PyPI (Recommended)
+## ⚡ TL;DR Quick Demo
 
 ```bash
-pip install chimera-stack-cli
+# Install (isolated) – requires Python 3.8+
+pipx install chimera-stack-cli
+
+# Spin up a React + PHP + MySQL stack in <10 s
+chimera create my-app -t fullstack/react-php -v mysql
+cd my-app
+
+docker compose up -d  # 🚀 Boom – services are live!
 ```
 
-#### Option 2: Prebuilt Binaries
-
-Download for [Linux/macOS](https://www.chimerastack.com/download), then:
-
-```bash
-chmod +x chimera-stack-cli-*
-./chimera-stack-cli-macos
-```
+Open http://localhost:8xxx (ports are auto-assigned) and start coding.
 
 ---
 
-### Create a Project
+## ✨ Key Features
+
+- 🔌 **Template Catalogue** – ready-made stacks for frontend, backend & databases
+- 🔄 **Smart Port Allocation** – avoid `address already in use` forever
+- 🗜️ **Zero-Config** – works with a single CLI command, no manual Docker files
+- 🧩 **Composable** – mix components or add plugins (coming v0.3)
+- 🧑‍🎓 **Learning-Friendly** – minimal jargon, helpful errors & docs
+
+---
+
+## 📦 Installation
+
+| Method               | Command                                                     |
+| -------------------- | ----------------------------------------------------------- |
+| `pipx` (recommended) | `pipx install chimera-stack-cli`                            |
+| `pip`                | `pip install chimera-stack-cli`                             |
+| Homebrew             | `brew install chimerastack/tap/cli` _(soon)_                |
+| Binary               | Grab the latest release from **Releases** page & `chmod +x` |
+
+> _Requires Docker 20.10+ and Docker Compose plugin._
+
+---
+
+## 🛠️ Creating Your First Project
 
 ```bash
-chimera create my-project
+# Interactive wizard
+chimera create my-blog
+
+# Non-interactive: choose stack + variant up-front
+chimera create my-api -t backend/php-web -v postgresql
 ```
 
-You'll be prompted to choose:
-
-```
-? Choose a category:
-❯ Backend
-  Frontend
-  Fullstack
-? Choose a template:
-❯ backend/php/mysql
-  fullstack/react-php/mysql
-```
-
-Then:
+Once finished:
 
 ```bash
-cd my-project
-docker-compose up -d
+cd my-api
+docker compose up -d
 ```
 
-Done. Your services are up and running on dynamic, non-conflicting ports.
+Your containers are accessible on dynamically allocated ports printed by the CLI.
+
+---
+
+## 🎨 Template Gallery _(v0.2)_
+
+| Category      | Templates                                                   |
+| ------------- | ----------------------------------------------------------- |
+| **Frontend**  | `frontend/react`, `frontend/vue` _(soon)_                   |
+| **Backend**   | `backend/php-web`, `backend/node-express` _(roadmap)_       |
+| **Databases** | `database/mysql`, `database/postgresql`, `database/mariadb` |
+| **Fullstack** | `fullstack/react-php`                                       |
+
+Run `chimera list` to explore the full list and search by tag.
+
+---
+
+## 🔍 How It Works
+
+1. **Selects** stack + components based on CLI flags.
+2. **Renders** all files through a Jinja2 pipeline (variable substitution).
+3. **Allocates** free ports via `PortAllocator` (ranges defined in `config/ports.yaml`).
+4. **Executes** optional `post_copy` tasks for final clean-up.
+5. **Outputs** a ready project you can commit to Git or deploy.
+
+_No global state, no magic network shims – just Docker Compose done right._
+
+---
+
+## 🧑‍🎨 Authoring Custom Templates
+
+Want to add **Django + Redis**? Check out the dedicated guide:
+
+➡️ [`docs/authoring-templates.md`](docs/authoring-templates.md)
+
+It covers directory layout, `template.yaml` schema, Jinja2 helpers, testing & publishing.
 
 ---
 
 ## 🔮 Roadmap
 
-| Version  | Milestone                                                             |
-| -------- | --------------------------------------------------------------------- |
-| `v0.2.0` | Template refactor: `frontend/`, `backend/`, `fullstack/`              |
-| `v0.3.0` | Plugin support: `chimera add monitoring`, logging, Redis, etc.        |
-| `v0.4.0` | Mix & Match: `chimera init --frontend react --backend php --db mysql` |
-| `v0.5.0` | Deploy to Coolify or Docker VPS (`chimera deploy`)                    |
-| `v1.0.0` | Stable release with web CLI sync, versioning, and DevOps tools        |
+| Version | Highlights                                                          |
+| ------- | ------------------------------------------------------------------- |
+| `v0.3`  | Plugin system (`chimera add redis`, monitoring…)                    |
+| `v0.4`  | Mix-&-Match wizard (`chimera init --frontend react --backend node`) |
+| `v0.5`  | `chimera deploy` to Coolify or bare VPS                             |
+| `v1.0`  | Stable API, web/CLI sync, template marketplace                      |
 
----
-
-## 💡 Coming Soon
-
-- Node.js backend templates
-- Python (Flask/FastAPI) templates
-- Vue/Svelte frontend stacks
-- Redis & RabbitMQ plugin support
-- `chimera deploy` (Coolify, Docker VPS)
+See [`ROADMAP.md`](ROADMAP.md) for the full list.
 
 ---
 
 ## 🤝 Contributing
 
-Want to contribute a template or core feature?
+1. Fork → create feature branch → commit (semantic) → PR.
+2. Run `pre-commit` & `pytest` locally – CI must stay green.
+3. Need help? Open an issue or start a discussion.
 
-- Fork the repo
-- Follow the [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Use semantic commits (`feat:`, `fix:`, `chore:`)
-- Submit a PR
-
----
-
-## 🧑‍💻 Support & Community
-
-- 🌍 [ChimeraStack Web Platform](https://www.chimerastack.com)
-- 🐙 [GitHub Issues](https://github.com/Amirofcodes/ChimeraStack_CLI/issues)
-- 🛠️ Docs, changelog, and CLI binaries
-- 💬 Feature requests always welcome
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for environment setup, commit policy & test guide.
 
 ---
 
 ## 📄 License
 
-MIT License — [LICENSE](LICENSE)
-
----
+MIT © Amirofcodes & contributors

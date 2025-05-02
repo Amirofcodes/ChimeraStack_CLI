@@ -9,22 +9,26 @@ This guide is for developers who want to contribute to the ChimeraStack CLI proj
 This is the recommended approach as it ensures a consistent development environment across all platforms.
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Amirofcodes/ChimeraStack_CLI.git
 cd ChimeraStack_CLI
 ```
 
 2. Start the development container:
+
 ```bash
 docker-compose up -d
 ```
 
 3. Access the development container:
+
 ```bash
 docker exec -it chimerastack_cli-cli-dev-1 bash
 ```
 
 4. Install the package in development mode:
+
 ```bash
 pip install -e .
 ```
@@ -34,11 +38,13 @@ pip install -e .
 If you prefer developing directly on your machine:
 
 1. Prerequisites:
+
    - Python 3.11+
    - pip
    - virtualenv or venv
 
 2. Clone and setup:
+
 ```bash
 # Clone the repository
 git clone https://github.com/Amirofcodes/ChimeraStack_CLI.git
@@ -56,6 +62,7 @@ pip install -e .
 ## Development Commands
 
 ### Testing Templates
+
 ```bash
 # Create test project
 chimera create test-project
@@ -76,6 +83,7 @@ docker-compose up -d
 ```
 
 ### Common Development Tasks
+
 ```bash
 # Run tests
 pytest
@@ -119,33 +127,13 @@ ChimeraStack_CLI/
 └── tests/                # Test suite
 ```
 
-## Template Development Guidelines
+## Template Development
 
-Each template must include:
-1. `template.yaml` - Template metadata and configuration
-2. `docker-compose.yml` - Container orchestration
-3. Development environment configuration files
-4. Required service configurations (web server, database, etc.)
-5. Health checks for all services
-6. Proper port mappings that don't conflict with other templates
+Looking to **build or extend templates**? We moved the full authoring guide to:
 
-### Port Allocation Strategy
-- MySQL template: 172.18.0.x:80xx
-- PostgreSQL template: 172.19.0.x:80xx
-- MariaDB template: 172.20.0.x:80xx
-- Fullstack template: 172.21.0.x:80xx
+➡️ `docs/authoring-templates.md`
 
-### Template Structure Example
-```
-template/
-├── config/
-│   └── development.yaml   # Development configuration
-├── docker/               # Service configurations
-│   ├── service1/
-│   └── service2/
-├── docker-compose.yml    # Container orchestration
-└── template.yaml         # Template metadata
-```
+That document covers schema, best-practices and publishing workflow.
 
 ## Commit Guidelines
 
@@ -162,6 +150,7 @@ chore: Routine tasks
 ```
 
 Example commit messages:
+
 ```
 feat: add PostgreSQL template
 docs: update template development guide
