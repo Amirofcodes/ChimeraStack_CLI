@@ -2,7 +2,7 @@
 
 /**
  * Database setup script for ChimeraStack
- * 
+ *
  * This file handles database connection setup for different database types.
  * It should be included in your application's bootstrap process.
  */

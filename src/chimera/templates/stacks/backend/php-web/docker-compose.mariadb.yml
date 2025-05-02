@@ -66,4 +66,4 @@ volumes:
   mariadb_data:
     name: ${PROJECT_NAME}_mariadb_data
   php_logs:
-    name: ${PROJECT_NAME}_php_logs 
+    name: ${PROJECT_NAME}_php_logs

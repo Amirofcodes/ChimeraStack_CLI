@@ -44,10 +44,10 @@ try {
     }
 
     $pdo = new PDO($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $options);
-    
+
     $stmt = $pdo->query("SELECT version() as version");
     $version = $stmt->fetch()['version'];
-    
+
     $connectionInfo = [
         'connected' => true,
         'server_version' => $version,
@@ -188,4 +188,4 @@ if ($dbEngine === 'postgresql') {
         <?php endif; ?>
     </div>
 </body>
-</html> 
+</html>

@@ -30,4 +30,4 @@ RUN npm list axios >/dev/null 2>&1 || npm install axios && \
 EXPOSE 3000
 
 # Start development server
-CMD ["npm", "start"] 
+CMD ["npm", "start"]

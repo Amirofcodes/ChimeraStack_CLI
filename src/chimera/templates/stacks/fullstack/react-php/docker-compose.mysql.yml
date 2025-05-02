@@ -97,4 +97,4 @@ networks:
 
 volumes:
   mysql_data:
-    name: ${PROJECT_NAME}_mysql 
+    name: ${PROJECT_NAME}_mysql

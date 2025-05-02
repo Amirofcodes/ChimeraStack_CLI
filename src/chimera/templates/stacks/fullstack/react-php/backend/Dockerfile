@@ -41,4 +41,4 @@ RUN mkdir -p /var/log/php \
     && chown -R www-data:www-data /var/www/html /var/log/php /var/log/php-fpm
 
 # Start PHP-FPM
-CMD ["php-fpm"] 
+CMD ["php-fpm"]
