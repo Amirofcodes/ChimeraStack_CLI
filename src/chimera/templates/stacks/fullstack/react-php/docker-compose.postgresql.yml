@@ -93,4 +93,4 @@ networks:
 
 volumes:
   pg_data:
-    name: ${PROJECT_NAME}_postgres 
+    name: ${PROJECT_NAME}_postgres

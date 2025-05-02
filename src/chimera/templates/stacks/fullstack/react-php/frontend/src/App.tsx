@@ -23,18 +23,18 @@ function App() {
 
   useEffect(() => {
     const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-    
+
     // Fetch data from API
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Using Promise.all to fetch both endpoints in parallel
         const [postsResponse, usersResponse] = await Promise.all([
           axios.get(`${apiUrl}/posts`),
           axios.get(`${apiUrl}/users`)
         ]);
-        
+
         setPosts(postsResponse.data);
         setUsers(usersResponse.data);
         setError(null);
@@ -90,7 +90,7 @@ function App() {
           </a>
         </div>
       </header>
-      
+
       <div className="container">
         {loading ? (
           <div className="loading">Loading data...</div>
@@ -121,7 +121,7 @@ function App() {
                 </ul>
               )}
             </div>
-            
+
             <div className="data-section">
               <h2>Posts</h2>
               {posts.length === 0 ? (
@@ -140,7 +140,7 @@ function App() {
           </div>
         )}
       </div>
-      
+
       <footer>
         <p>Powered by ChimeraStack</p>
       </footer>
@@ -148,4 +148,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
