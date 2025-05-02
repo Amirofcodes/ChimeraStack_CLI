@@ -120,31 +120,80 @@ plugin system work without legacy friction._
 
 _SQLSTATE[HY000] [2002] Connection refused_ on fresh `docker-compose up`.
 
-## 11. Release v0.2.0 Checklist
-
-### Local (release/v0.2.0 branch)
-
-- [ ] Bump version to `0.2.0` in `src/chimera/__init__.py`, `setup.py`, and `pyproject.toml`.
-- [ ] Search & replace hard-coded version strings in docs/CLI banners.
-- [ ] Add `## [v0.2.0] – YYYY-MM-DD` to `CHANGELOG.md`.
-- [ ] `pre-commit run --all-files`, `pytest`, `mypy src/` → green.
-- [ ] `pipx install .` then `chimera --version` & `chimera list` show 0.2.0.
-- [ ] `python -m build` → wheel + sdist, run `twine check`.
-- [ ] `./build_executables.sh` for macOS/Linux; generate checksums.
-- [ ] `git commit -m "chore(release): prepare v0.2.0"` and tag `v0.2.0`.
-
-### Remote (GitHub main)
-
-- [ ] Push branch & tag; open PR → merge after CI passes.
-- [ ] Release workflow builds artefacts & uploads.
-- [ ] Draft GitHub Release from tag, attach binaries & `CHANGELOG` notes.
-- [ ] Publish to PyPI via `pypa/gh-action-pypi-publish`.
-- [ ] Update Homebrew/Scoop manifests with new SHA/URL.
-- [ ] Verify public install: `pipx install chimera-stack-cli==0.2.0` prints correct version.
-- [ ] Announce release (tweet, Discord, etc.).
-
-## 12. Optional Hardening Tasks (post-0.2.0)
+## 11. Optional Hardening Tasks (post-0.2.0)
 
 - [ ] Audit all stack `template.yaml` files – ensure each declares a `README.md` in its `files:` block (`grep -R "files:" src/chimera/templates/stacks | …`).
 - [ ] Refactor `TemplateManager._create_readme()` so it executes **after** `post_copy` tasks when a README is still missing (safety-net fallback).
 - [ ] Ensure each template's `welcome_page.sections` covers every exposed service so the CLI summary prints correct ports.
+
+## 12. Template Expansion Tasks (v0.2.5)
+
+> Follow the step-by-step process described in `docs/authoring-templates.md` for every new **stack** listed below. Each bullet maps to a subsection of the Authoring Guide (Directory Layout → template.yaml → Compose & Jinja2 → post_copy → Validation & Testing → Publishing).
+
+### Phase A — Minimum Effort, Biggest Reach
+
+#### 12.1 `beginner/php-static-site-sqlite`
+
+- [ ] Create folder `templates/stacks/beginner/php-static-site-sqlite/`.
+- [ ] Draft `template.yaml` (name, version, id, description, tags, variables).
+- [ ] Copy `backend/php-web` component include + add `database/sqlite` component.
+- [ ] Write `docker-compose.yml.j2` (no ports → relies on PortAllocator; use volume for SQLite file).
+- [ ] Declare `post_copy` to rename `.env.example` → `.env`.
+- [ ] Add **welcome_page** sections so port summary prints correctly.
+- [ ] Unit test: ensure schema validation passes & PortAllocator assigns default HTTP port.
+- [ ] Integration smoke test: `chimera create demo -t beginner/php-static-site-sqlite` followed by `docker compose config`.
+- [ ] Add entry to catalogue if maintained.
+
+#### 12.2 `frontend/react-static`
+
+- [ ] Folder `templates/stacks/frontend/react-static/`.
+- [ ] Provision `template.yaml` (id `frontend/react-static`).
+- [ ] Bundle a Vite `Dockerfile` or use `node:lts` image with hot-reload.
+- [ ] Compose exposes `:5173` (dev server) via PortAllocator.
+- [ ] Add variables (`project_name`, `ports.web`).
+- [ ] post_copy: delete `docker-compose.dev.yml` placeholder.
+- [ ] Tests: schema, create, docker compose config.
+
+#### 12.3 `fullstack/django-react-postgres`
+
+- [ ] Components: `backend/django`, `frontend/react-static`, `database/postgresql`.
+- [ ] Multi-compose setup: React dev server proxied to Django API.
+- [ ] Ensure Django `settings.py` uses env vars substituted by Jinja2.
+- [ ] Healthchecks for Django + Postgres.
+- [ ] Seed Postgres with demo user inside post_copy (`command` task).
+- [ ] Add unit/integration tests (including DB migration).
+
+### Phase B
+
+#### 12.4 `backend/fastapi-celery-postgres`
+
+- [ ] Stack directory `backend/fastapi-celery-postgres`.
+- [ ] Services: FastAPI (uvicorn), Celery worker, Celery Beat, Redis, Postgres, Flower dashboard.
+- [ ] Compose fragments under `compose/` for clearer includes.
+- [ ] Swagger URL printed in welcome page.
+- [ ] Tests: ensure Celery worker service and API both healthy.
+
+#### 12.5 `backend/node-express`
+
+- [ ] Starter Express API with nodemon.
+- [ ] Optional MongoDB variant reserved for later; initial version uses SQLite or Postgres.
+- [ ] Example endpoint & Jest tests scaffold in template.
+
+#### 12.6 `fullstack/laravel-vue-mysql`
+
+- [ ] Use `backend/laravel` component + `frontend/vue` component + `database/mysql`.
+- [ ] Sail-like setup for Laravel queue & scheduler.
+- [ ] Post_copy tasks: generate Laravel APP_KEY, run `npm install && npm run build` for Vue.
+
+---
+
+**General Checklist for Each New Template** (reuse across items above):
+
+1. Directory skeleton created.
+2. Valid `template.yaml` committed.
+3. At least one `.j2` file renders without placeholders.
+4. `README.md` inside template explaining usage & gotchas.
+5. Ports allocated via `PortAllocator`, no hard-coded numbers.
+6. Unit test + integration smoke test added.
+7. Catalogue (`templates.yaml` or CLI list) updated.
+8. Docs snippet added to main README (commands & description).

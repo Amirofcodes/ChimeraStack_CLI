@@ -34,6 +34,26 @@ This roadmap outlines the planned evolution of the ChimeraStack CLI from v0.1.0 
 
 ---
 
+## 📦 v0.2.5 – Template Expansion (Phase A & B)
+
+**Objective:** Add high-impact stacks that broaden appeal before introducing the plugin system.
+
+### Phase A — Minimum Effort, Biggest Reach
+
+- [ ] **PHP Static Site + SQLite** _(reuse existing backend/php-web component)_
+- [ ] **React Front-End Only** _(Vite-based) – small footprint_
+- [ ] **Django + React + PostgreSQL** _(new but highly requested)_
+
+### Phase B
+
+- [ ] **FastAPI Power-User Stack** _(FastAPI + Celery + Redis + PostgreSQL)_
+- [ ] **Node + Express Starter** _(Beginner-friendly)_
+- [ ] **Laravel + Vue** _(Student/Teacher focus)_
+
+> ℹ️ Any stacks that depend on the upcoming plugin system (e.g., monitoring, RedisInsights) will be queued for implementation **after** `v0.3.0` lands.
+
+---
+
 ## 🔌 v0.3.0 – Plugin System
 
 **Objective:** Introduce plugin-style services (e.g., monitoring, logging) that can be dynamically added.

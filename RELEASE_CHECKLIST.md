@@ -2,16 +2,16 @@
 
 ## Pre-Release Checks
 
-- [ ] All tests passing locally
-- [ ] All pre-commit hooks passing
+- [ ] All tests passing locally: `pytest -m "not integration" -q`
+- [ ] All pre-commit hooks passing: `pre-commit run --all-files`
 - [ ] Documentation is up to date
-- [ ] CHANGELOG.md is updated
 
-## Version Update
+## Local Changes
 
 - [ ] Update version in `src/chimera/__init__.py`
 - [ ] Update version in `setup.py`
 - [ ] Update version in `Dockerfile.test`
+- [ ] Update CHANGELOG.md with new version and changes
 
 ## Build and Test Locally
 
@@ -25,9 +25,17 @@
 
 ## Git Operations
 
+- [ ] Commit all changes: `git add . && git commit -m "fix: description of changes"`
 - [ ] Create git tag: `git tag v{version}`
 - [ ] Push tag: `git push origin v{version}`
 - [ ] Push all changes: `git push origin main`
+
+## GitHub Release
+
+- [ ] Create GitHub release with tag
+- [ ] Upload macOS and Linux executables to release
+- [ ] Add release notes from CHANGELOG.md
+- [ ] Publish release
 
 ## PyPI Deployment
 
@@ -35,16 +43,8 @@
 - [ ] Verify package on PyPI: https://pypi.org/project/chimera-stack-cli/
 - [ ] Test installation: `pipx install chimera-stack-cli=={version} --force`
 
-## GitHub Release
+## Post-Release Verification
 
-- [ ] Create new release on GitHub
-- [ ] Upload macOS executable
-- [ ] Upload Linux executable
-- [ ] Add release notes from CHANGELOG.md
-
-## Post-Release
-
-- [ ] Verify installation works on macOS: `pipx install chimera-stack-cli`
-- [ ] Verify installation works on Linux (using Docker)
+- [ ] Verify executables work on both platforms
 - [ ] Update documentation if needed
 - [ ] Close related issues and PRs
