@@ -27,7 +27,7 @@ setup(
     },
     python_requires=">=3.8",
     author="Amir",
-    author_email="amirofcodes@github.com",
+    author_email="amirofcodes20@gmail.com",
     description="A template-based development environment manager",
     long_description=long_description,
     long_description_content_type="text/markdown",

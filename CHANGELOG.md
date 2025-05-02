@@ -5,17 +5,33 @@ All notable changes to ChimeraStack CLI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.2.0] – 2024-03-26
+## [v0.2.3] - 2024-03-27
+
+### Fixed
+
+- Corrected GitHub repository URL in package metadata
+
+## [v0.2.2] - 2024-03-27
 
 ### Added
 
-- JSON Schema validation for template.yaml files
-- Jinja2-based template rendering pipeline
-- Single canonical compose file strategy per stack
-- Port allocation configuration via config/ports.yaml
-- Component-specific post_copy tasks
-- Comprehensive developer documentation
-- Unit and integration tests with GitHub Actions
+- Added missing jinja2 dependency
+
+## [v0.2.1] - 2024-03-27
+
+### Added
+
+- Added missing jsonschema dependency
+
+## [v0.2.0] - 2024-03-27
+
+### Added
+
+- Initial release with basic template functionality
+- Support for PHP web development templates
+- Docker-based development environments
+- Template validation using JSON Schema
+- Command-line interface for project creation and management
 
 ### Changed
 
