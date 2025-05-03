@@ -32,6 +32,9 @@ MANIFEST
 *.manifest
 *.spec
 
+# Project-specific
+releases/
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -175,4 +178,3 @@ codebase.md
 gitloghistory.txt
 
 tests/__pycache__/
-gitloghistory.txt
