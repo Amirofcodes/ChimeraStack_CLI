@@ -23,8 +23,8 @@ Keep it lightweight: tick a box, push, repeat.
 
 ### 3 · Repo Hygiene
 
-- [ ] Purge historical binaries via _git filter‑repo_
-- [x] Add `releases/` & `dist/` to `.gitignore`
+- [x] Purge historical binaries via _git filter‑repo_
+- [x] Add `releases/` & `dist/` to `.gitignore`
 
 ### 4 · Test Pyramid Foundation
 
