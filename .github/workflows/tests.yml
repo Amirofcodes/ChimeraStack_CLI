@@ -74,9 +74,18 @@ jobs:
       - name: Check if this is a tag release
         id: check-tag
         run: |
-          if [[ $GITHUB_REF == refs/tags/v* && ! $GITHUB_REF == *-* ]]; then
-            echo "is_tag=true" >> $GITHUB_OUTPUT
+          echo "GitHub ref: $GITHUB_REF"
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            echo "This is a tag push"
+            if [[ $GITHUB_REF == *-* ]]; then
+              echo "This is a pre-release tag (contains hyphen)"
+              echo "is_tag=false" >> $GITHUB_OUTPUT
+            else
+              echo "This is a release tag"
+              echo "is_tag=true" >> $GITHUB_OUTPUT
+            fi
           else
+            echo "This is not a tag push"
             echo "is_tag=false" >> $GITHUB_OUTPUT
           fi
 
@@ -86,7 +95,9 @@ jobs:
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
+          echo "Checking for PyPI token..."
           if [ -n "$PYPI_TOKEN" ]; then
+            echo "PyPI token found."
             echo "has_credentials=true" >> $GITHUB_OUTPUT
           else
             echo "has_credentials=false" >> $GITHUB_OUTPUT
@@ -99,7 +110,8 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          twine upload dist/*
+          echo "Uploading to PyPI..."
+          python -m twine upload --verbose dist/*
 
   build-executables:
     name: Build platform executables
