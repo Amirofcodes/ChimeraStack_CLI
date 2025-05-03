@@ -84,21 +84,20 @@ jobs:
         id: check_pypi_credentials
         if: steps.check-tag.outputs.is_tag == 'true'
         env:
-          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          if [ -n "$PYPI_USERNAME" ] && [ -n "$PYPI_PASSWORD" ]; then
+          if [ -n "$PYPI_TOKEN" ]; then
             echo "has_credentials=true" >> $GITHUB_OUTPUT
           else
             echo "has_credentials=false" >> $GITHUB_OUTPUT
-            echo "Warning: PyPI credentials not found. Skipping PyPI publishing."
+            echo "Warning: PyPI token not found. Skipping PyPI publishing."
           fi
 
       - name: Publish to PyPI
         if: steps.check_pypi_credentials.outputs.has_credentials == 'true'
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
           twine upload dist/*
 
@@ -250,8 +249,8 @@ jobs:
     name: Build and push Docker image
     needs: [test]
     runs-on: ubuntu-latest
-    # Only build Docker for non-prerelease tags (no hyphen)
-    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
+    # Temporarily disabled until fixed
+    if: false # startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
     permissions:
       packages: write
       contents: read
