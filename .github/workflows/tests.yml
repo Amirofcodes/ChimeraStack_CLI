@@ -7,6 +7,10 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write # For creating releases
+  packages: write # For pushing to GHCR
+
 jobs:
   test:
     name: Test Python ${{ matrix.python-version }}
@@ -71,7 +75,7 @@ jobs:
       - name: Check if this is a tag release
         id: check-tag
         run: |
-          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+          if [[ $GITHUB_REF == refs/tags/v* && ! $GITHUB_REF == *-* ]]; then
             echo "is_tag=true" >> $GITHUB_OUTPUT
           else
             echo "is_tag=false" >> $GITHUB_OUTPUT
@@ -118,10 +122,25 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller setuptools-scm
 
-      - name: Build executable
+      - name: Verify spec file exists
         run: |
-          chmod +x ${{ matrix.script }}
-          ${{ matrix.script }}
+          if [ ! -f "chimera-stack-cli.spec" ]; then
+            echo "Error: chimera-stack-cli.spec file is missing"
+            exit 1
+          fi
+
+      - name: Make script executable
+        run: chmod +x ${{ matrix.script }}
+
+      - name: Build executable
+        run: ${{ matrix.script }}
+
+      - name: Verify executable was created
+        run: |
+          if [ ! -f "releases/${{ matrix.artifact }}" ]; then
+            echo "Error: Executable was not created at releases/${{ matrix.artifact }}"
+            exit 1
+          fi
 
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v4
@@ -129,16 +148,17 @@ jobs:
           name: ${{ matrix.artifact }}
           path: releases/${{ matrix.artifact }}
 
-      - name: Generate checksums
-        run: |
-          cd releases
-          sha256sum ${{ matrix.artifact }} > ${{ matrix.artifact }}.sha256
+      - name: Upload checksum file
+        uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: releases/SHA256SUMS.txt
 
   create-release:
     name: Create GitHub Release
     needs: [build-and-publish, build-executables]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
     permissions:
       contents: write
 
@@ -157,6 +177,7 @@ jobs:
           files: |
             artifacts/chimera-stack-cli-macos/chimera-stack-cli-macos
             artifacts/chimera-stack-cli-linux/chimera-stack-cli-linux
+            artifacts/checksums/SHA256SUMS.txt
             artifacts/python-package-distributions/*
           generate_release_notes: true
 
@@ -164,7 +185,7 @@ jobs:
     name: Build and push Docker image
     needs: [test]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
     permissions:
       packages: write
       contents: read

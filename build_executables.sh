@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build executables for all platforms
+# Build executables for macOS
 
 # Ensure PyInstaller is installed
 pip install pyinstaller
@@ -14,12 +14,24 @@ if [ -d "dist" ]; then
   find dist -type f -not -name "*.whl" -not -name "*.tar.gz" -delete
 fi
 
-# Build for current platform
-echo "Building executable for $(uname -s)"
+# Build for macOS
+echo "Building executable for macOS"
 pyinstaller chimera-stack-cli.spec
 
-# Create release directory
+# Create release directory if it doesn't exist
 mkdir -p releases
-cp dist/chimera-stack-cli* releases/
+cp dist/chimera-stack-cli releases/chimera-stack-cli-macos
 
-echo "Build complete! Executables are in the 'releases' directory."
+# Make executable
+chmod +x releases/chimera-stack-cli-macos
+
+# Generate checksum and append to SHA256SUMS.txt
+cd releases || exit 1
+# Remove any existing entry for this file
+if [ -f SHA256SUMS.txt ]; then
+  grep -v "chimera-stack-cli-macos$" SHA256SUMS.txt > SHA256SUMS.txt.new
+  mv SHA256SUMS.txt.new SHA256SUMS.txt
+fi
+shasum -a 256 chimera-stack-cli-macos >> SHA256SUMS.txt
+
+echo "Build complete! Executable is in the 'releases' directory."
