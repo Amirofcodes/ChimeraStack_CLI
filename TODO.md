@@ -1,85 +1,89 @@
 # 📝 ChimeraStack CLI Sprint Board
 
-_Updated May 3 2025_
+_Updated May 3 2025_
 
 Keep it lightweight: tick a box, push, repeat.
 
 ---
 
-## 🟢 Sprint 1 — Packaging & CI Cleanup (aim v0.2.4)
+## 🟢 Sprint 1 — Packaging & CI Cleanup (🎯 v0.2.4)
 
 ### 1 · Packaging
 
-- [x] Remove `setup.py` & `setup.cfg`
-- [x] Add **setuptools‑scm**; mark `dynamic = ["version"]` in _pyproject.toml_
-- [x] Surface `__version__` in `src/chimera/__init__.py`
+- [x] Remove `setup.py` & `setup.cfg`
+- [x] Adopt **setuptools‑scm** (`dynamic = ["version"]` in *pyproject.toml*)
+- [x] Expose `__version__` in `src/chimera/__init__.py`
 
-### 2 · CI / Release Pipeline
+### 2 · CI / Release Pipeline
 
-- [x] Replace `python setup.py …` with `pipx run build`
-- [x] Upload wheel + sdist to PyPI on tag
-- [x] Build & push Docker image `ghcr.io/chimera/cli:<tag>`
+- [x] Switch to `pipx run build`
+- [x] Upload wheel + sdist to PyPI on tag
+- [x] Build & push Docker image `ghcr.io/chimera/cli:<tag>`
 - [x] Build PyInstaller bundles (macOS & Linux) → attach to GitHub Release
 
-### 3 · Repo Hygiene
+### 3 · Repo Hygiene
 
-- [x] Purge historical binaries via _git filter‑repo_
-- [x] Add `releases/` & `dist/` to `.gitignore`
-
-### 4 · Test Pyramid Foundation
-
-- [ ] Unit tests mock Docker (PortAllocator, TemplateManager)
-- [ ] Snapshot tests for rendered compose/env files
-- [ ] Smoke test: `chimera create … && docker compose config`
+- [x] Purge historical binaries with _git filter‑repo_
+- [x] Add `releases/` & `dist/` to `.gitignore`
 
 ---
 
-## 🟡 Sprint 2 — ComposeGraph Refactor + Sentinel Templates (aim v0.2.5)
+## 🟡 Sprint 2 — ComposeGraph Refactor + Sentinel Templates (🎯 v0.2.5)
 
-### 5 · Core Graph
+### 4.1 · Unit Tests (first)
+
+- [ ] Add pytest fixture that patches `docker.from_env`
+- [ ] Write edge‑case tests for `PortAllocator.allocate()`
+
+### 4.2 · Core Graph
 
 - [ ] Implement `compose_graph.py`
 - [ ] Integrate `PortAllocator.allocate()` into graph nodes
-- [ ] Refactor `TemplateManager` to build graph then render
+- [ ] Refactor `TemplateManager` to build → validate → render graph
 
-### 6 · Sentinel Templates
+### 4.3 · Sentinel Templates
 
-- [ ] **frontend/react-static** – add Chimerastack welcome page elements
-- [ ] **backend/php-web** – ensure Nginx + 3 DB variants; welcome page shows port links
-- [ ] **fullstack/react-php** – verify against new graph, fix any schema drift
+- [ ] **frontend/react-static** – add Chimera welcome elements
+- [ ] **backend/php-web** – Nginx + 3 DB variants; welcome page links
+- [ ] **fullstack/react-php** – verify against new graph, fix drift
 
-### 7 · Project Stamp
+### 4.4 · Snapshot & Smoke Tests
 
-- [ ] Write `.chimera.yml` (`cli_version`, `created_at`) into generated projects
+- [ ] Snapshot: rendered compose YAML for `react-static`
+- [ ] Smoke: `chimera create … && docker compose config` on all sentinel stacks
 
-### 8 · Docs
+### 4.5 · Project Stamp
+
+- [ ] Write `.chimera.yml` (`cli_version`, `created_at`) to generated projects
+
+### 4.6 · Docs
 
 - [ ] Update README & authoring docs for new graph flow
 - [ ] CONTRIBUTING: how to run tests without Docker
 
 ---
 
-## 🟠 Sprint 3 — Plugin MVP (aim v0.3.0)
+## 🟠 Sprint 3 — Plugin MVP (🎯 v0.3.0)
 
 ### 9 · Plugin API
 
 - [ ] Define `chimera.plugin_api` base class
-- [ ] Entry‑point discovery (`[chimera.plugins]` in `pyproject.toml`)
+- [ ] Entry‑point discovery (`[chimera.plugins]` in *pyproject.toml*)
 - [ ] Typer auto‑mount: `chimera add <plugin>`
 
-### 10 · Sample Plugins
+### 10 · Sample Plugins
 
 - [ ] **Redis** (single service)
 - [ ] **Netdata** (monitoring stack)
 
 ### 11 · Validation
 
-- [ ] Conflict & port‑collision checker after plugin mutations
+- [ ] Conflict & port‑collision checker after plugin mutations
 - [ ] Snapshot tests for plugin‑augmented compose output
 
 ---
 
-## 🟣 Sprint 4 — Template Expansion A (aim v0.3.1)
+## 🟣 Sprint 4 — Template Expansion A (🎯 v0.3.1)
 
 - [ ] `fullstack/django-react-postgres`
 - [ ] Document community submission workflow
@@ -87,8 +91,8 @@ Keep it lightweight: tick a box, push, repeat.
 
 ---
 
-## 🔮 Backlog / Nice‑to‑Have
+## 🔮 Backlog / Nice‑to‑Have
 
 - [ ] Port lockfile persistence (`~/.chimera/ports.json`)
-- [ ] `chimera update` to bump an existing project's stack
-- [ ] VS Code devcontainer generator
+- [ ] `chimera update` to bump an existing project’s stack
+- [ ] VS Code devcontainer generator
