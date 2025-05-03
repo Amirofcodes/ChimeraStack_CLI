@@ -16,10 +16,10 @@ Keep it lightweight: tick a box, push, repeat.
 
 ### 2 · CI / Release Pipeline
 
-- [ ] Replace `python setup.py …` with `pipx run build`
-- [ ] Upload wheel + sdist to PyPI on tag
-- [ ] Build & push Docker image `ghcr.io/chimera/cli:<tag>`
-- [ ] Build PyInstaller bundles (macOS & Linux) → attach to GitHub Release
+- [x] Replace `python setup.py …` with `pipx run build`
+- [x] Upload wheel + sdist to PyPI on tag
+- [x] Build & push Docker image `ghcr.io/chimera/cli:<tag>`
+- [x] Build PyInstaller bundles (macOS & Linux) → attach to GitHub Release
 
 ### 3 · Repo Hygiene
 
@@ -90,5 +90,5 @@ Keep it lightweight: tick a box, push, repeat.
 ## 🔮 Backlog / Nice‑to‑Have
 
 - [ ] Port lockfile persistence (`~/.chimera/ports.json`)
-- [ ] `chimera update` to bump an existing project’s stack
-- [ ] VS Code devcontainer generator
+- [ ] `chimera update` to bump an existing project's stack
+- [ ] VS Code devcontainer generator
