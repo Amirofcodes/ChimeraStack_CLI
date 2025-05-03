@@ -1,139 +1,84 @@
-# 🛣️ ChimeraStack CLI Roadmap
+# 🛣️ ChimeraStack CLI Roadmap
 
-This roadmap outlines the planned evolution of the ChimeraStack CLI from v0.1.0 onward. The goal is to make the CLI more modular, extensible, and powerful for developers who need production-ready local development environments with zero configuration and dynamic port allocation.
+_Updated May 3 2025_
 
----
-
-## ✅ v0.2.0 – Template Refactor & Structure Redesign
-
-**Objective:** Migrate template structure to support clearer categories and future expansion.
-
-### Tasks
-
-- [x] Refactor templates into:
-  - `frontend/`
-  - `backend/`
-  - `fullstack/`
-- [x] Update `template.yaml` format:
-  - Add `category`, `tags`, `description`
-- [x] Update `chimera list` command to support new structure
-- [x] Update `chimera create` logic to support new categories
-- [x] Add backward compatibility for legacy paths (temporary)
-- [x] Update documentation and GitHub release
-
-### Improvements & Fixes
-
-- [x] Fixed database connectivity issues in PHP templates with all database variants (MySQL, MariaDB, PostgreSQL)
-- [x] Improved environment variable handling for DB connections
-- [x] Fixed port mapping issues with database admin tools (phpMyAdmin/pgAdmin)
-- [x] Updated cleanup process to remove redundant docker-compose files
-- [x] Improved template file processing with proper variable substitution
-- [x] Enhanced README generation to be database-variant aware (MySQL/MariaDB/PostgreSQL)
-- [x] Added special PostgreSQL support for handling port-specific issues
-- [x] Fixed landing page templates to correctly show connection information
+> Milestones only. Day‑to‑day tasks live in [`TODO.md`](TODO.md).
 
 ---
 
-## 📦 v0.2.5 – Template Expansion (Phase A & B)
+## ✅ v0.2.0 — Template Refactor _(shipped 26 Mar 2025)_
 
-**Objective:** Add high-impact stacks that broaden appeal before introducing the plugin system.
+- New template categories (`base`, `stacks`)
+- Dynamic port allocator
+- Jinja2 renderer + validation
+- Initial tests
 
-### Phase A — Minimum Effort, Biggest Reach
+## ✅ v0.2.1 – v0.2.3 — Hot‑fix Train
 
-- [ ] **PHP Static Site + SQLite** _(reuse existing backend/php-web component)_
-- [ ] **React Front-End Only** _(Vite-based) – small footprint_
-- [ ] **Django + React + PostgreSQL** _(new but highly requested)_
-
-### Phase B
-
-- [ ] **FastAPI Power-User Stack** _(FastAPI + Celery + Redis + PostgreSQL)_
-- [ ] **Node + Express Starter** _(Beginner-friendly)_
-- [ ] **Laravel + Vue** _(Student/Teacher focus)_
-
-> ℹ️ Any stacks that depend on the upcoming plugin system (e.g., monitoring, RedisInsights) will be queued for implementation **after** `v0.3.0` lands.
+- Dependency pinning, URL fixes, minor CLI polish
 
 ---
 
-## 🔌 v0.3.0 – Plugin System
+## 🚧 v0.2.4 — Packaging & Release Pipeline _(current sprint)_
 
-**Objective:** Introduce plugin-style services (e.g., monitoring, logging) that can be dynamically added.
-
-### Tasks
-
-- [ ] Define plugin system (YAML fragments + compose merge)
-- [ ] Create `chimera add service <plugin>` command
-- [ ] Implement first plugins:
-  - Monitoring (e.g., Netdata)
-  - Logging (e.g., Loki/Grafana)
-  - Redis
-- [ ] Ensure dynamic ports are allocated for plugins
-- [ ] Add plugin documentation + examples
+| Goal                           | Detail                                              |
+| ------------------------------ | --------------------------------------------------- |
+| Pure‑`pyproject` build         | Drop `setup.py`; adopt **setuptools‑scm**           |
+| Single source of version truth | Git tag → `__version__`                             |
+| Repo hygiene                   | Strip historical binaries; `.gitignore` `releases/` |
+| Official Docker image          | `ghcr.io/chimera/cli:<tag>`                         |
+| Test‑pyramid foundation        | Unit (mocked Docker) ➜ Snapshot ➜ Smoke             |
 
 ---
 
-## 🔀 v0.4.0 – Mix & Match Composition
+## 🔨 v0.2.5 — ComposeGraph Core + Sentinel Templates
 
-**Objective:** Allow users to build environments from selected components.
-
-### Tasks
-
-- [ ] Add `chimera init` with:
-
-  ```bash
-  chimera init my-app --frontend react --backend php --db mysql
-  ```
-
-- [ ] Add service-to-template mapping logic
-- [ ] Compose Docker Compose files from modular parts
-- [ ] Add fallback interactive wizard
+- **ComposeGraph** internal model
+- Refactor `TemplateManager` ➜ graph ➜ renderer
+- Integrate `PortAllocator` into graph
+- **Sentinel template trio**
+  - `frontend/react-static` – single‑service, edited React welcome page
+  - `backend/php-web` – PHP + Nginx + **mysql / postgresql / mariadb** variants, Chimerastack welcome page with port links
+  - `fullstack/react-php` – existing stack retained as regression test
 
 ---
 
-## ☁️ v0.5.0 – Deployments (Coolify or Generic)
+## 🔌 v0.3.0 — Plugin System MVP
 
-**Objective:** Allow deploying Chimera environments to remote hosts like Coolify or via SSH.
-
-### Tasks
-
-- [ ] Add `chimera deploy` command
-- [ ] Integrate with Coolify via webhook or Git
-- [ ] Optional SSH + Docker deployment
-- [ ] Add project-level config: `.chimera/project.yaml`
-- [ ] Add domain + SSL prompts (for Coolify)
+- Entry‑point discovery (`chimera.plugins`)
+- `chimera add <plugin>` Typer sub‑command
+- Sample plugins: **Redis**, **Netdata**
+- Port‑collision detection after plugin mutations
 
 ---
 
-## 🧪 Optional Enhancements (Parallel or Future Work)
+## 📦 v0.3.1 — Template Expansion A
 
-- [ ] `chimera test template` command for verifying a template's structure and health
-- [ ] `chimera update templates` to pull remote or latest templates
-- [ ] Template marketplace (public repo integration)
-- [ ] VSCode `.devcontainer` auto-generation
-- [ ] Documentation portal + live template browser
+- `fullstack/django-react-postgres`
+- Community template submission process
 
 ---
 
-## 🔖 Version Tags Summary
+## 🔀 v0.4.0 — Mix‑&‑Match Init
 
-| Version  | Milestone                                      |
-| -------- | ---------------------------------------------- |
-| `v0.2.0` | Template refactor (frontend/backend/fullstack) |
-| `v0.3.0` | Plugin system                                  |
-| `v0.4.0` | Mix & Match environments                       |
-| `v0.5.0` | Deployment support                             |
+`chimera init --frontend react --backend node --db postgres`
 
 ---
 
-## 💬 Contributions & Feedback
+## ☁️ v0.5.0 — Deployments
 
-If you'd like to contribute to any part of this roadmap or suggest ideas, open a discussion or issue on GitHub.
+`chimera deploy` to Coolify or generic SSH target with Let’s Encrypt helper
 
 ---
 
-```
+### Version ↔ Milestone
 
-```
-
-```
-
-```
+| Version | Milestone                              |
+| ------- | -------------------------------------- |
+| 0.2.0   | Template refactor                      |
+| 0.2.4   | Packaging & pipeline cleanup           |
+| 0.2.5   | ComposeGraph core + sentinel templates |
+| 0.3.0   | Plugin system MVP                      |
+| 0.3.1   | Template expansion A                   |
+| 0.4.0   | Mix‑&‑Match init                       |
+| 0.5.0   | Deployments                            |
