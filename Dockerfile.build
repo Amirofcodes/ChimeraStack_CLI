@@ -21,6 +21,13 @@ RUN pyinstaller --clean \
     --name chimera-stack-cli \
     --onefile \
     src/chimera/cli.py \
-    --add-data "src/chimera/templates:chimera/templates"
+    --add-data "src/chimera/templates:chimera/templates" \
+    --add-data "src/chimera/config:chimera/config"
 
-# The executable will be in /app/dist/chimera-stack-cli
+# Move the executable to a directory in PATH
+RUN cp /app/dist/chimera-stack-cli /usr/local/bin/ \
+    && chmod +x /usr/local/bin/chimera-stack-cli
+
+# Set the entrypoint
+ENTRYPOINT ["chimera-stack-cli"]
+CMD ["--help"]
