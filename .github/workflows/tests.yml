@@ -5,11 +5,11 @@ on:
   push:
     branches: [main, master]
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
-  contents: write  # For creating releases
-  packages: write  # For pushing to GHCR
+  contents: write # For creating releases
+  packages: write # For pushing to GHCR
 
 jobs:
   test:
@@ -18,18 +18,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11']
+        python-version: ["3.10", "3.11"]
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for setuptools-scm to detect version
+          fetch-depth: 0 # Required for setuptools-scm to detect version
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -50,13 +50,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for setuptools-scm to detect version
+          fetch-depth: 0 # Required for setuptools-scm to detect version
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install build dependencies
         run: |
@@ -108,13 +108,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for setuptools-scm to detect version
+          fetch-depth: 0 # Required for setuptools-scm to detect version
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -122,54 +122,52 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller setuptools-scm
 
-      - name: Generate PyInstaller spec file
+      - name: Create PyInstaller spec file
         run: |
           if [ ! -f "chimera-stack-cli.spec" ]; then
-            cat > chimera-stack-cli.spec << 'SPEC'
-# -*- mode: python ; coding: utf-8 -*-
-
-block_cipher = None
-
-a = Analysis(
-    ['src/chimera/cli.py'],
-    pathex=[],
-    binaries=[],
-    datas=[('src/chimera/templates', 'chimera/templates'),
-           ('src/chimera/config', 'chimera/config')],
-    hiddenimports=[],
-    hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
-    noarchive=False,
-)
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
-
-exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
-    name='chimera-stack-cli',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-)
-SPEC
+            echo '# -*- mode: python ; coding: utf-8 -*-' > chimera-stack-cli.spec
+            echo '' >> chimera-stack-cli.spec
+            echo 'block_cipher = None' >> chimera-stack-cli.spec
+            echo '' >> chimera-stack-cli.spec
+            echo 'a = Analysis(' >> chimera-stack-cli.spec
+            echo "    ['src/chimera/cli.py']," >> chimera-stack-cli.spec
+            echo '    pathex=[],' >> chimera-stack-cli.spec
+            echo '    binaries=[],' >> chimera-stack-cli.spec
+            echo "    datas=[('src/chimera/templates', 'chimera/templates')," >> chimera-stack-cli.spec
+            echo "           ('src/chimera/config', 'chimera/config')]," >> chimera-stack-cli.spec
+            echo '    hiddenimports=[],' >> chimera-stack-cli.spec
+            echo '    hookspath=[],' >> chimera-stack-cli.spec
+            echo '    hooksconfig={},' >> chimera-stack-cli.spec
+            echo '    runtime_hooks=[],' >> chimera-stack-cli.spec
+            echo '    excludes=[],' >> chimera-stack-cli.spec
+            echo '    win_no_prefer_redirects=False,' >> chimera-stack-cli.spec
+            echo '    win_private_assemblies=False,' >> chimera-stack-cli.spec
+            echo '    cipher=block_cipher,' >> chimera-stack-cli.spec
+            echo '    noarchive=False,' >> chimera-stack-cli.spec
+            echo ')' >> chimera-stack-cli.spec
+            echo 'pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)' >> chimera-stack-cli.spec
+            echo '' >> chimera-stack-cli.spec
+            echo 'exe = EXE(' >> chimera-stack-cli.spec
+            echo '    pyz,' >> chimera-stack-cli.spec
+            echo '    a.scripts,' >> chimera-stack-cli.spec
+            echo '    a.binaries,' >> chimera-stack-cli.spec
+            echo '    a.zipfiles,' >> chimera-stack-cli.spec
+            echo '    a.datas,' >> chimera-stack-cli.spec
+            echo '    [],' >> chimera-stack-cli.spec
+            echo "    name='chimera-stack-cli'," >> chimera-stack-cli.spec
+            echo '    debug=False,' >> chimera-stack-cli.spec
+            echo '    bootloader_ignore_signals=False,' >> chimera-stack-cli.spec
+            echo '    strip=False,' >> chimera-stack-cli.spec
+            echo '    upx=True,' >> chimera-stack-cli.spec
+            echo '    upx_exclude=[],' >> chimera-stack-cli.spec
+            echo '    runtime_tmpdir=None,' >> chimera-stack-cli.spec
+            echo '    console=True,' >> chimera-stack-cli.spec
+            echo '    disable_windowed_traceback=False,' >> chimera-stack-cli.spec
+            echo '    argv_emulation=False,' >> chimera-stack-cli.spec
+            echo '    target_arch=None,' >> chimera-stack-cli.spec
+            echo '    codesign_identity=None,' >> chimera-stack-cli.spec
+            echo '    entitlements_file=None,' >> chimera-stack-cli.spec
+            echo ')' >> chimera-stack-cli.spec
           fi
 
       - name: Make script executable
@@ -243,7 +241,7 @@ SPEC
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for setuptools-scm to detect version
+          fetch-depth: 0 # Required for setuptools-scm to detect version
 
       - name: Extract tag name
         id: tag
