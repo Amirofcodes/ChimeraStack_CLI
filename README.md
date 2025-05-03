@@ -72,7 +72,7 @@ Open http://localhost:8xxx (ports are auto-assigned) and start coding.
 | Homebrew             | `brew install chimerastack/tap/cli` _(soon)_                |
 | Binary               | Grab the latest release from **Releases** page & `chmod +x` |
 
-> _Requires Docker 20.10+ and Docker Compose plugin._
+> _Requires Python 3.10+ and Docker 20.10+ with Docker Compose plugin._
 
 ---
 
