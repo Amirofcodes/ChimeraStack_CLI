@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.10', '3.11']
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,16 +30,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-      
+
       - name: Install package in development mode
         run: pip install -e .
-      
+
       - name: Run tests
         run: pytest -m "not integration" -v
 
@@ -57,21 +57,21 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-      
+
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build twine
-      
+
       - name: Build package
         run: python -m build
-      
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
-      
+
       - name: Check if this is a tag release
         id: check-tag
         run: |
@@ -80,7 +80,7 @@ jobs:
           else
             echo "is_tag=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Publish to PyPI
         if: steps.check-tag.outputs.is_tag == 'true'
         env:
@@ -104,30 +104,32 @@ jobs:
           - os: ubuntu-latest
             script: ./build_linux_executable.sh
             artifact: chimera-stack-cli-linux
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Required for setuptools-scm to detect version
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller setuptools-scm
-      
+
       - name: Generate PyInstaller spec file if missing
         run: |
           if [ ! -f "chimera-stack-cli.spec" ]; then
-            echo "Generating PyInstaller spec file"
-            cat > chimera-stack-cli.spec << 'EOL'
-# -*- mode: python ; coding: utf-8 -*-
+            echo "Generating PyInstaller spec file with Python"
+            python -c "
+import os
+
+spec_content = '''# -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
@@ -170,28 +172,32 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-EOL
+'''
+
+with open('chimera-stack-cli.spec', 'w') as f:
+    f.write(spec_content)
+"
           fi
-      
+
       - name: Make script executable
         run: chmod +x ${{ matrix.script }}
-      
+
       - name: Build executable
         run: ${{ matrix.script }}
-      
+
       - name: Verify executable was created
         run: |
           if [ ! -f "releases/${{ matrix.artifact }}" ]; then
             echo "Error: Executable was not created at releases/${{ matrix.artifact }}"
             exit 1
           fi
-      
+
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-${{ matrix.artifact }}
           path: releases/${{ matrix.artifact }}
-      
+
       - name: Upload checksum file
         uses: actions/upload-artifact@v4
         with:
@@ -204,28 +210,28 @@ EOL
     runs-on: ubuntu-latest
     # Only create release for non-prerelease tags (no hyphen)
     if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-      
+
       - name: Prepare release files
         run: |
           mkdir -p release-files
           cp artifacts/macos-latest-chimera-stack-cli-macos/chimera-stack-cli-macos release-files/
           cp artifacts/ubuntu-latest-chimera-stack-cli-linux/chimera-stack-cli-linux release-files/
-          
+
           # Merge checksum files
           cat artifacts/macos-latest-checksums/SHA256SUMS.txt > release-files/SHA256SUMS.txt
           cat artifacts/ubuntu-latest-checksums/SHA256SUMS.txt >> release-files/SHA256SUMS.txt
-          
+
           # Copy Python packages
           cp artifacts/python-package-distributions/* release-files/
-      
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -240,26 +246,26 @@ EOL
     runs-on: ubuntu-latest
     # Only build Docker for non-prerelease tags (no hyphen)
     if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Required for setuptools-scm to detect version
-      
+
       - name: Extract tag name
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -269,7 +275,7 @@ EOL
           tags: |
             ghcr.io/chimera/cli:${{ steps.tag.outputs.tag }}
             ghcr.io/chimera/cli:latest
-      
+
       - name: Check Docker image
         run: |
           docker pull ghcr.io/chimera/cli:${{ steps.tag.outputs.tag }}
