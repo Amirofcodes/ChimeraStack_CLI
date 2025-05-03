@@ -122,14 +122,11 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller setuptools-scm
 
-      - name: Generate PyInstaller spec file if missing
+      - name: Generate PyInstaller spec file
         run: |
           if [ ! -f "chimera-stack-cli.spec" ]; then
-            echo "Generating PyInstaller spec file with Python"
-            python -c "
-import os
-
-spec_content = '''# -*- mode: python ; coding: utf-8 -*-
+            cat > chimera-stack-cli.spec << 'SPEC'
+# -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
@@ -172,11 +169,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-'''
-
-with open('chimera-stack-cli.spec', 'w') as f:
-    f.write(spec_content)
-"
+SPEC
           fi
 
       - name: Make script executable
