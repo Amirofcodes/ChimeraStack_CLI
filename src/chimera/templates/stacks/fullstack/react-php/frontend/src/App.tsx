@@ -1,151 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './App.css';
-
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  user_id: number;
-}
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 function App() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [apiStatus, setApiStatus] = useState<string>('Loading...')
+  const [apiData, setApiData] = useState<any>(null)
 
   useEffect(() => {
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+    const apiUrl = import.meta.env.VITE_API_URL || '/api'
 
-    // Fetch data from API
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Using Promise.all to fetch both endpoints in parallel
-        const [postsResponse, usersResponse] = await Promise.all([
-          axios.get(`${apiUrl}/posts`),
-          axios.get(`${apiUrl}/users`)
-        ]);
-
-        setPosts(postsResponse.data);
-        setUsers(usersResponse.data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load data from API. Please check if the backend server is running.');
-        // Set empty arrays so the UI doesn't break
-        setPosts([]);
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+    axios.get(`${apiUrl}/status`)
+      .then(response => {
+        setApiStatus('Connected')
+        setApiData(response.data)
+      })
+      .catch(error => {
+        console.error('API connection error:', error)
+        setApiStatus('Error connecting to API')
+      })
+  }, [])
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src="https://raw.githubusercontent.com/robinmoisson/static-react-logo/master/react.svg" alt="React Logo" width={120} />
-        <h1>Welcome to ChimeraStack</h1>
-        <p>
-          This project was scaffolded with <strong>ChimeraStack CLI</strong> and ships with a
-          ready-to-code React&nbsp;+&nbsp;PHP&nbsp;+&nbsp;MySQL environment.
-        </p>
-        <p>Edit <code>frontend/src/App.tsx</code> and save to reload.</p>
-        <div style={{ marginTop: "1rem" }}>
-          {process.env.WDS_SOCKET_PORT && (
-            <a
-              href={`http://localhost:${process.env.WDS_SOCKET_PORT}`}
-              target="_blank"
-              rel="noreferrer"
-              className="link"
-            >
-              React Dev Server
-            </a>
-          )}
-          <span> · </span>
-          <a href="/api" className="link">Backend API</a>
-          <span> · </span>
-          <a
-            href={
-              window.location.hostname === "localhost"
-                ? `http://localhost:8080`
-                : "/phpmyadmin"
-            }
-            target="_blank"
-            rel="noreferrer"
-            className="link"
-          >
-            phpMyAdmin
-          </a>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
+          React + PHP Fullstack
+        </h1>
 
-      <div className="container">
-        {loading ? (
-          <div className="loading">Loading data...</div>
-        ) : error ? (
-          <div className="error">
-            <h2>Error</h2>
-            <p>{error}</p>
-            <div className="connection-info">
-              <h3>Connection Information</h3>
-              <p>Make sure your backend API is running and accessible.</p>
-              <p>Current API URL: {process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}</p>
-            </div>
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2 text-gray-700">API Status</h2>
+          <div className={`px-4 py-3 rounded ${
+            apiStatus === 'Connected'
+              ? 'bg-green-100 text-green-800'
+              : apiStatus === 'Loading...'
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-red-100 text-red-800'
+          }`}>
+            {apiStatus}
           </div>
-        ) : (
-          <div className="data-container">
-            <div className="data-section">
-              <h2>Users</h2>
-              {users.length === 0 ? (
-                <p>No users found</p>
-              ) : (
-                <ul>
-                  {users.map(user => (
-                    <li key={user.id}>
-                      <h3>{user.name}</h3>
-                      <p>{user.email}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+        </div>
 
-            <div className="data-section">
-              <h2>Posts</h2>
-              {posts.length === 0 ? (
-                <p>No posts found</p>
-              ) : (
-                <ul>
-                  {posts.map(post => (
-                    <li key={post.id}>
-                      <h3>{post.title}</h3>
-                      <p>{post.content}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+        {apiData && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2 text-gray-700">API Response</h2>
+            <pre className="bg-gray-100 p-3 rounded overflow-auto text-sm">
+              {JSON.stringify(apiData, null, 2)}
+            </pre>
           </div>
         )}
-      </div>
 
-      <footer>
-        <p>Powered by ChimeraStack</p>
-      </footer>
+        <div className="text-center text-gray-500 text-sm">
+          <p>Built with Vite, React, Tailwind, and PHP</p>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

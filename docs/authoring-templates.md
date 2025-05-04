@@ -234,3 +234,108 @@ TemplateManager().create_project(
     variant="postgresql"  # or mysql, mariadb
 )
 ```
+
+## Full-stack Templates with Vite Frontend
+
+When creating modern full-stack templates, using Vite for frontend development provides a much better developer experience than older bundlers. Here's how to structure a full-stack template with Vite:
+
+### Frontend Configuration
+
+1. **Vite + React Setup**:
+
+   ```yaml
+   post_create:
+     - working_dir: "frontend"
+       command: "npm create vite@latest . --template react-ts -- --skip-git"
+     - working_dir: "frontend"
+       command: "npm install"
+   ```
+
+2. **Adding Tailwind**:
+
+   ```yaml
+   post_create:
+     # After Vite setup
+     - working_dir: "frontend"
+       command: "npm install -D tailwindcss postcss autoprefixer"
+     - working_dir: "frontend"
+       command: "npx tailwindcss init -p"
+   ```
+
+3. **Dockerfile for Vite**:
+   ```dockerfile
+   FROM node:18-alpine
+   WORKDIR /app
+   COPY package*.json ./
+   RUN npm ci
+   COPY . .
+   RUN npm run build  # For production asset generation
+   ENV FRONTEND_PORT=${FRONTEND_PORT}
+   CMD ["npm","run","dev","--","--host","0.0.0.0","--port","${FRONTEND_PORT}"]
+   ```
+
+### Nginx Reverse Proxy
+
+For full-stack templates, configure Nginx to route API requests to the backend while serving the frontend:
+
+```nginx
+# Serve static dashboard/welcome page
+root /usr/share/nginx/html;
+
+# API requests - proxy to backend
+location /api/ {
+    proxy_pass http://backend:80/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+
+# Frontend - proxy to Vite dev server
+location / {
+    proxy_pass http://frontend:${FRONTEND_PORT};
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+}
+```
+
+### Environment Variables
+
+Use environment files to pass configuration from host to containers:
+
+1. **Template .env**:
+
+   ```
+   VITE_API_URL=http://localhost:${WEB_PORT}/api
+   ```
+
+2. **Docker Compose Environment**:
+   ```yaml
+   frontend:
+     environment:
+       - "VITE_API_URL=http://localhost:${WEB_PORT}/api"
+       - "FRONTEND_PORT=${FRONTEND_PORT}"
+   ```
+
+### Database Variants
+
+For templates supporting multiple database types, use a Jinja2 template for `docker-compose.yml`:
+
+```yaml
+db:
+  image: {{ "postgres:15-alpine" if DB_ENGINE=='postgresql'
+            else "mariadb:11" if DB_ENGINE=='mariadb'
+            else "mysql:8.0" }}
+  ports:
+    - "${DB_PORT}:{{ "5432" if DB_ENGINE=='postgresql' else "3306" }}"
+  environment:
+    {% if DB_ENGINE == 'postgresql' %}
+    - "POSTGRES_DB=${DB_DATABASE}"
+    {% else %}
+    - "MYSQL_DATABASE=${DB_DATABASE}"
+    {% endif %}
+```
+
+This pattern makes it easy to maintain a single `docker-compose.yml.j2` file that supports all database variants.

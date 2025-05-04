@@ -1,11 +1,11 @@
-# React PHP Fullstack Stack
+# React PHP Fullstack Template
 
 Welcome to your ChimeraStack-generated full-stack development environment! This stack gives you:
 
-- React (TypeScript) frontend (served via Nginx at \`http://localhost:${WEB_PORT}\` with live dev-server on \`${FRONTEND_PORT}\`)
-- PHP-FPM backend served through Nginx (reachable at http://localhost:${WEB_PORT})
-- MySQL / MariaDB / PostgreSQL database with pre-seeded schema
-- DB admin GUI (phpMyAdmin or pgAdmin) on http://localhost:${ADMIN_PORT}
+- **Modern Frontend**: React (TypeScript) with Vite and Tailwind CSS
+- **Production-ready Backend**: PHP-FPM with API routing through Nginx
+- **Database Options**: MySQL, MariaDB, or PostgreSQL (configured via variant)
+- **Administrative Tools**: phpMyAdmin or pgAdmin depending on your database
 
 ---
 
@@ -13,10 +13,10 @@ Welcome to your ChimeraStack-generated full-stack development environment! This 
 
 ```bash
 # start containers in the background
-$ docker-compose up -d
+$ docker compose up -d
 
 # tail logs (optional)
-$ docker-compose logs -f --tail=50
+$ docker compose logs -f --tail=50
 ```
 
 After the containers are **healthy** you can visit:
@@ -26,7 +26,7 @@ After the containers are **healthy** you can visit:
 | Frontend (React SPA)        | http://localhost:${WEB_PORT}      |
 | React Dev Server (optional) | http://localhost:${FRONTEND_PORT} |
 | Backend API                 | http://localhost:${WEB_PORT}/api  |
-| Database GUI                | http://localhost:${ADMIN_PORT}    |
+| Database Admin Console      | http://localhost:${ADMIN_PORT}    |
 
 ---
 
@@ -34,15 +34,25 @@ After the containers are **healthy** you can visit:
 
 ### Frontend
 
-The frontend container runs `npm start` so it hot-reloads as you edit code.
+The frontend uses Vite for blazing-fast HMR (Hot Module Replacement) and Tailwind CSS for styling:
 
 ```bash
-# inside container (one-off)
+# inside container (one-off commands)
 $ docker compose exec frontend sh
+
+# Install dependencies
 /app $ npm install <package>
+
+# Build for production (already in Dockerfile)
+/app $ npm run build
 ```
 
-To run tests or other scripts, execute them in the container or add them to the package.json then restart.
+Edit files in `frontend/src/` to see immediate updates in the browser. The frontend is pre-configured with:
+
+- TypeScript support
+- Tailwind CSS integration
+- Vite development server
+- API connection setup
 
 ### Backend
 
@@ -54,22 +64,40 @@ PHP files live under `backend/`. The web root is `backend/public/` and API route
 
 ### Database
 
-Connection details are injected via environment variables (see `docker-compose.*.yml`). Default creds:
+Database connection details are injected via environment variables. Default credentials:
 
 ```
 DB_USER=${DB_USERNAME}
 DB_PASSWORD=${DB_PASSWORD}
-DB_NAME=${DB_DATABASE}
+DB_DATABASE=${DB_DATABASE}
 DB_HOST=db
+DB_PORT={{ "5432 for PostgreSQL" if DB_ENGINE == 'postgresql' else "3306 for MySQL/MariaDB" }}
 ```
 
-Use the GUI or `docker compose exec db mysql -u$DB_USERNAME -p$DB_PASSWORD $DB_DATABASE`.
+Use the appropriate admin tool (phpMyAdmin or pgAdmin) at http://localhost:${ADMIN_PORT}.
+
+{% if DB_ENGINE == 'postgresql' %}
+Connect to PostgreSQL directly with: `docker compose exec db psql -U $DB_USERNAME -d $DB_DATABASE`
+{% else %}
+Connect to {{ "MySQL" if DB_ENGINE == 'mysql' else "MariaDB" }} directly with: `docker compose exec db mysql -u$DB_USERNAME -p$DB_PASSWORD $DB_DATABASE`
+{% endif %}
+
+---
+
+## Infrastructure
+
+The template uses:
+
+- Nginx as a reverse proxy (routing API calls to PHP backend, other traffic to frontend)
+- Docker volumes for database persistence
+- Environment variables for configuration
+- Healthchecks for container dependencies
 
 ---
 
 ## Customising ports
 
-The CLI auto-selects free ports at project creation. Edit `docker-compose*.yml` if you need to hard-code them; then recreate containers.
+The CLI auto-selects free ports at project creation. Edit `.env` if you need to change them after setup.
 
 ---
 
@@ -82,10 +110,13 @@ $ docker compose down
 # rebuild images after Dockerfile changes
 $ docker compose build --no-cache
 
-# prune unused images/volumes
-$ docker system prune
+# view frontend logs
+$ docker compose logs -f frontend
+
+# execute composer commands in backend
+$ docker compose exec backend composer require <package>
 ```
 
 ---
 
-Happy hacking! 🎉
+Happy coding! 🚀
