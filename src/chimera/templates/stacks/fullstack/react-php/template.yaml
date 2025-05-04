@@ -124,6 +124,11 @@ post_copy:
   # Delete empty or obsolete directories
   - remove_dir: "database"
   - remove_dir: "www"
+  # Update upstream name in welcome nginx config to match backend service
+  - patch_file:
+      path: "docker/nginx/conf.d/default.conf"
+      replace: "fastcgi_pass php:9000;"
+      with: "fastcgi_pass backend:9000;"
 
 # Tags for searching
 tags:
