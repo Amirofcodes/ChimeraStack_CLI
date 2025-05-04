@@ -71,3 +71,5 @@ post_copy:
   - remove_dir: "www"
   # Keep root index.html as Vite entry; only remove unused PHP placeholder
   - remove: "public/index.php"
+  # Remove conflicting default.conf copied by core_welcome component
+  - remove: "docker/nginx/conf.d/default.conf"
