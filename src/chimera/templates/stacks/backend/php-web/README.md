@@ -59,3 +59,6 @@ $ docker compose exec php bash
 ---
 
 Happy coding! ✨
+
+**Dashboard**: http://localhost:${WEB_PORT}/welcome.html
+**PHP Status**: http://localhost:${WEB_PORT}/

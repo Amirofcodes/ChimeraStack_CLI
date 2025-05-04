@@ -143,8 +143,8 @@ post_copy:
   - remove: "docker-compose.mariadb.override.yml"
   - remove: "docker-compose.postgresql.override.yml"
 
-  # Delete the old www directory (content copied to public/)
-  - remove_dir: "www"
+  # Keep core_welcome dashboard files
+  # - remove_dir: "www"   # removed per dual-page approach
 
   # Standardise Nginx root directive – ensure it points to /public
   - patch_file:
