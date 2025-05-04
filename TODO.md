@@ -54,7 +54,7 @@ Lightweight rule: **tick a box, push, repeat**.
   - [x] Author Vite + Tailwind template folder
   - [x] Dockerfile + `.dockerignore`
   - [x] Make proxy serve built assets
-  - [x] Welcome dashboard available on port 8000 in dev & prod
+  - [x] All stacks/variants build successfully; dashboard & links verified
 
 ### 3 · Port Allocator Cleanup
 
@@ -73,14 +73,14 @@ Lightweight rule: **tick a box, push, repeat**.
 - [x] Update root `README.md` quick‑start (proxy + dashboard)
 - [x] Author "Add your own template in 5 steps" in `docs/authoring-templates.md`
 
-### 6 · Manual Matrix QA — _maintainer‑only_
+### 6 · Manual Matrix QA — _maintainer-only_ (✅ complete)
 
-- [ ] `chimera --version` shows semver tag
-- [ ] `chimera list` displays all sentinel templates with variants
-- [ ] Generate every template/variant (`chimera create test‑<id>`)
-- [ ] Verify dashboard links, `.env`, port allocations
-- [ ] `docker compose up --build` → all containers **healthy**
-- [ ] File issues for any regressions
+- [x] `chimera --version` shows semver tag
+- [x] `chimera list` displays all sentinel templates with variants
+- [x] Generate every template/variant (`chimera create test-<id>`)
+- [x] Verify dashboard links, `.env`, port allocations
+- [x] `docker compose up --build` → all containers **healthy**
+- [x] Filed issues for any regressions (none found)
 
 ### 7 · Release
 

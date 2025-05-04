@@ -262,7 +262,7 @@ When creating modern full-stack templates, using Vite for frontend development p
        command: "npx tailwindcss init -p"
    ```
 
-3. **Dockerfile for Vite**:
+3. **Dockerfile for Vite** (dev + prod):
    ```dockerfile
    FROM node:18-alpine
    WORKDIR /app
@@ -271,7 +271,8 @@ When creating modern full-stack templates, using Vite for frontend development p
    COPY . .
    RUN npm run build  # For production asset generation
    ENV FRONTEND_PORT=${FRONTEND_PORT}
-   CMD ["npm","run","dev","--","--host","0.0.0.0","--port","${FRONTEND_PORT}"]
+   CMD ["sh", "-c", "npm run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT}"]
+   EXPOSE ${FRONTEND_PORT}
    ```
 
 ### Nginx Reverse Proxy

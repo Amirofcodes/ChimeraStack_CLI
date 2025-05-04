@@ -43,7 +43,7 @@
 pipx install chimera-stack-cli
 
 # Spin up a React + PHP + MySQL stack in <10 s
-chimera create my-app -t fullstack/react-php -d mysql
+chimera create my-app -t fullstack/react-php -d mysql   # choose db variant
 cd my-app
 
 docker compose up -d  # 🚀 Boom – services are live!
@@ -99,12 +99,12 @@ Your containers are accessible on dynamically allocated ports printed by the CLI
 
 ## 🎨 Template Gallery _(v0.2.5)_
 
-| Category      | Templates                                                                                  |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| **Frontend**  | `frontend/react-static` (Vite+Tailwind frontend-only template), `frontend/vue` _(soon)_    |
-| **Backend**   | `backend/php-web` (MySQL, PostgreSQL, MariaDB), `backend/node-express` _(roadmap)_         |
-| **Databases** | `database/mysql`, `database/postgresql`, `database/mariadb`                                |
-| **Fullstack** | `fullstack/react-php` (Vite+Tailwind frontend + PHP backend with MySQL/PostgreSQL/MariaDB) |
+| Category      | Templates                                                                                                                               |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend**  | `frontend/react-static` (Vite + Tailwind; Vite dev server on <code>3000-3999</code>), `frontend/vue` _(soon)_                           |
+| **Backend**   | `backend/php-web` (MySQL, PostgreSQL, MariaDB), `backend/node-express` _(roadmap)_                                                      |
+| **Databases** | `database/mysql`, `database/postgresql`, `database/mariadb`                                                                             |
+| **Fullstack** | `fullstack/react-php` (React + PHP; dev server on dynamic port, Nginx on <code>8000-8999</code>; DB variants: MySQL/MariaDB/PostgreSQL) |
 
 Run `chimera list` to explore the full list and search by tag.
 
