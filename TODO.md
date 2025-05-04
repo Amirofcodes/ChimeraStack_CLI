@@ -32,12 +32,12 @@ Lightweight rule: **tick a box, push, repeat**.
 
 ### 1 · Core Dashboard
 
-- [ ] **Create component** `base/core/welcome/`
-  - [ ] `nginx/conf.d/default.conf` (root → `/usr/share/nginx/html`)
-  - [ ] `www/welcome.html.j2` (Tailwind, dynamic links)
-  - [ ] `template.yaml` with `post_copy` to inject into every stack
-- [ ] Inject component into all stacks via `TemplateManager`
-- [ ] Unit test: generated projects contain `welcome.html` with no unresolved `{{ … }}`
+- [x] **Create component** `base/core/welcome/`
+  - [x] `nginx/conf.d/default.conf` (root → `/usr/share/nginx/html`)
+  - [x] `www/welcome.html.j2` (Tailwind, dynamic links)
+  - [x] `template.yaml` with `post_copy` to inject into every stack
+- [x] Inject component into all stacks via `TemplateManager`
+- [x] Unit test: generated projects contain `welcome.html` with no unresolved `{{ … }}`
 
 ### 2 · Template Authoring
 
@@ -70,7 +70,7 @@ Lightweight rule: **tick a box, push, repeat**.
 ### 5 · Docs & DX
 
 - [ ] Update root `README.md` quick‑start (proxy + dashboard)
-- [ ] Author “Add your own template in 5 steps” in `docs/authoring-templates.md`
+- [ ] Author "Add your own template in 5 steps" in `docs/authoring-templates.md`
 
 ### 6 · Manual Matrix QA — *maintainer‑only*
 

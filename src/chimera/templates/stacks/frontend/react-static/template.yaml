@@ -3,6 +3,13 @@ description: A static React application with development server
 category: frontend
 requires_ports:
   - frontend
+
+# Stack composition
+components:
+  core_welcome:
+    source: base/core/welcome
+    required: true
+
 services:
   frontend:
     # Use build context instead of image

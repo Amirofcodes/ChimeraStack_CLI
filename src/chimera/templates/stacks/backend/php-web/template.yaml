@@ -5,7 +5,7 @@ type: "stack"
 
 # Stack composition
 components:
-  welcome:
+  core_welcome:
     source: "base/core/welcome"
     required: true
 
