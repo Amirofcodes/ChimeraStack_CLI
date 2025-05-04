@@ -38,6 +38,12 @@ services:
       - "VITE_BACKEND_URL=http://localhost:${WEB_PORT}/api"
       - "FRONTEND_PORT=${FRONTEND_PORT}"
 
+  # Nginx service for production
+  nginx:
+    type: "web"
+    port_range: "8000-8999"
+    env_prefix: "WEB"
+
 # Welcome page configuration
 welcome_page:
   sections:
