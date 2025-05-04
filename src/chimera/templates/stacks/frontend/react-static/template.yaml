@@ -68,8 +68,11 @@ post_copy:
   - remove: "src/logo.svg"
   - remove: "src/reportWebVitals.ts"
   - remove: "src/setupTests.ts"
+  - rename:
+      from: "www/welcome.html"
+      to: "public/welcome.html"
   - remove_dir: "www"
   # Keep root index.html as Vite entry; only remove unused PHP placeholder
   - remove: "public/index.php"
-  # Remove conflicting default.conf copied by core_welcome component
+  # Remove conflicting default.conf from core_welcome
   - remove: "docker/nginx/conf.d/default.conf"
