@@ -143,7 +143,9 @@ post_copy:
   - remove: "docker-compose.mariadb.override.yml"
   - remove: "docker-compose.postgresql.override.yml"
 
-  # Keep core_welcome dashboard files
-  # - remove_dir: "www"   # removed per dual-page approach
+  # Move dashboard into public so Nginx can serve it with root /public
+  - rename:
+      from: "www/welcome.html"
+      to: "public/welcome.html"
 
   # root already points correctly after dual-page update
