@@ -54,6 +54,10 @@ docker compose up -d  # 🚀 Boom – services are live!
 
 Open http://localhost:8xxx (ports are auto-assigned) and start coding.
 
+## 📽 Interactive Demo
+
+[![asciicast](https://asciinema.org/a/CjY2cVEPWHlExixA4cJJE9iOd.svg)](https://asciinema.org/a/CjY2cVEPWHlExixA4cJJE9iOd)
+
 ---
 
 ## ✨ Key Features
