@@ -54,6 +54,7 @@ Lightweight rule: **tick a box, push, repeat**.
   - [x] Author Vite + Tailwind template folder
   - [x] Dockerfile + `.dockerignore`
   - [x] Make proxy serve built assets
+  - [x] Welcome dashboard available on port 8000 in dev & prod
 
 ### 3 · Port Allocator Cleanup
 
