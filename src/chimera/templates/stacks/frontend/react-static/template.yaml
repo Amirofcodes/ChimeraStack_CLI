@@ -1,0 +1,34 @@
+name: react-static
+description: A static React application with development server
+category: frontend
+requires_ports:
+  - frontend
+services:
+  frontend:
+    # Use build context instead of image
+    build: .
+    ports:
+      # Map host port (allocated dynamically) to container port 3000
+      - "${FRONTEND_PORT}:3000"
+    volumes:
+      # Mount local source code into /app
+      - .:/app
+      # Add a named volume or anonymous volume to persist node_modules
+      # This prevents host node_modules from overriding container's
+      - /app/node_modules
+    environment:
+      # Ensure Create React App uses the correct port inside the container
+      - PORT=3000
+# Remove mysql, phpmyadmin, db_default as they are not used
+variables:
+  project_name: "{{ project_name }}"
+files:
+  # Removed docker-compose.yml - it will be generated
+  - src/App.tsx: src/App.tsx
+  - public/index.html: public/index.html
+  - package.json: package.json
+  - .dockerignore: .dockerignore
+  - README.md: README.md # Keep README template
+  - env.template: .env # Keep .env template
+rename:
+  env.template: .env
