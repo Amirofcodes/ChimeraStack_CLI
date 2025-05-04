@@ -43,7 +43,7 @@
 pipx install chimera-stack-cli
 
 # Spin up a React + PHP + MySQL stack in <10 s
-chimera create my-app -t fullstack/react-php -v mysql
+chimera create my-app -t fullstack/react-php -d mysql
 cd my-app
 
 docker compose up -d  # 🚀 Boom – services are live!
@@ -83,7 +83,7 @@ Open http://localhost:8xxx (ports are auto-assigned) and start coding.
 chimera create my-blog
 
 # Non-interactive: choose stack + variant up-front
-chimera create my-api -t backend/php-web -v postgresql
+chimera create my-api -t backend/php-web -d postgresql
 ```
 
 Once finished:

@@ -84,17 +84,19 @@ def cli():
 @cli.command()
 @click.argument('name')
 @click.option('--template', '-t', help='Template to use for the project (e.g., php/nginx/mysql)')
+@click.option('--variant', '-d', help='Variant of the template to use (e.g., mysql, postgresql, mariadb)')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose output during creation')
-def create(name: str, template: str | None = None, verbose: bool = False):
+def create(name: str, template: str | None = None, variant: str | None = None, verbose: bool = False):
     """Create a new project from a template.
 
     Examples:
     \b
-    chimera create myproject                    # Interactive mode
-    chimera create myproject -t php/nginx/mysql # Direct template selection
-    chimera create myproject -v                 # Verbose output (shows detailed process)
+    chimera create myproject                                  # Interactive mode
+    chimera create myproject -t backend/php-web               # Direct template selection, interactive variant
+    chimera create myproject -t backend/php-web -d postgresql # Direct template and variant selection
+    chimera create myproject -v                               # Verbose output (shows detailed process)
     """
-    create_command(name, template, verbose)
+    create_command(name, template, variant, verbose)
 
 
 @cli.command()

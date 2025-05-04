@@ -9,11 +9,10 @@ from chimera.core import TemplateManager
 console = Console()
 
 
-def create_command(name: str, template: str | None = None, verbose: bool = False) -> None:
+def create_command(name: str, template: str | None = None, variant: str | None = None, verbose: bool = False) -> None:
     """Create a new project from a template."""
     try:
         template_manager = TemplateManager(verbose=verbose)
-        variant = None
 
         if not template:
             # Get all templates first
@@ -53,10 +52,10 @@ def create_command(name: str, template: str | None = None, verbose: bool = False
 
             template = selected
 
-            # Step 3: Check for variants and select if available
+            # Step 3: Check for variants and select if available (only if --variant not provided)
             template_info = next(
                 (t for t in templates if t['id'] == template), None)
-            if template_info and 'variants' in template_info and template_info['variants']:
+            if template_info and 'variants' in template_info and template_info['variants'] and not variant:
                 variants = template_info['variants']
                 if len(variants) > 1:  # Only prompt if multiple variants exist
                     variant = questionary.select(
