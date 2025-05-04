@@ -35,7 +35,7 @@ dependencies = [
 [project.urls]
 "Bug Tracker" = "https://github.com/Amirofcodes/ChimeraStack_CLI/issues"
 "Documentation" = "https://github.com/Amirofcodes/ChimeraStack_CLI#readme"
-"Source Code" = "https://github.com/Amirofcodes/ChimeraStack_CLI"
+"Source" = "https://github.com/Amirofcodes/ChimeraStack_CLI"
 
 [project.scripts]
 chimera = "chimera.cli:main"

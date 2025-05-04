@@ -7,6 +7,7 @@
 [![PyPI](https://img.shields.io/pypi/v/chimera-stack-cli)](https://pypi.org/project/chimera-stack-cli)
 [![CI](https://github.com/Amirofcodes/ChimeraStack_CLI/actions/workflows/ci.yml/badge.svg)](https://github.com/Amirofcodes/ChimeraStack_CLI/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Status: Alpha](https://img.shields.io/badge/status-alpha-orange)](#project-status)
 
 ---
 
@@ -25,6 +26,8 @@
 11. [License](#-license)
 
 ---
+
+## 🛈 Project Status
 
 ## ❓ Why ChimeraStack?
 

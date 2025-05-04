@@ -1,0 +1,49 @@
+name: "Bug Report"
+description: "File a bug report"
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: cli_version
+    attributes:
+      label: ChimeraStack CLI version
+      description: Run `chimera --version`
+      placeholder: v0.2.5
+    validations:
+      required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened?
+      description: Tell us what you were trying to do and what went wrong.
+      placeholder: "When I run `chimera create` with …"
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output or stack trace
+      render: bash
+    validations:
+      required: false
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows (WSL2)
+        - Other
+    validations:
+      required: true

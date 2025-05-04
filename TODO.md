@@ -56,24 +56,18 @@ Lightweight rule: **tick a box, push, repeat**.
   - [x] Make proxy serve built assets
   - [x] All stacks/variants build successfully; dashboard & links verified
 
-### 3 · Port Allocator Cleanup
-
-- [ ] Move remaining hard‑coded ranges to `config/ports.yaml`
-- [ ] Add admin‑tool ranges `8081‑8099`
-- [ ] Validation: allocator errors if YAML missing expected service
-
-### 4 · Automated Tests & CI
+### 3 · Automated Tests & CI
 
 - [ ] Snapshot test (`docker-compose.yml`, `.env`) for every template/variant
 - [ ] Smoke test: `chimera create … && docker compose config` (GitHub Actions)
-- [ ] Unit test: assert zero `{{ … }}` tokens post‑render
+- [ ] Unit test: assert zero `{{ … }}` tokens post-render
 
-### 5 · Docs & DX
+### 4 · Docs & DX
 
-- [x] Update root `README.md` quick‑start (proxy + dashboard)
+- [x] Update root `README.md` quick-start (proxy + dashboard)
 - [x] Author "Add your own template in 5 steps" in `docs/authoring-templates.md`
 
-### 6 · Manual Matrix QA — _maintainer-only_ (✅ complete)
+### 5 · Manual Matrix QA — _maintainer-only_ (✅ complete)
 
 - [x] `chimera --version` shows semver tag
 - [x] `chimera list` displays all sentinel templates with variants
@@ -82,9 +76,20 @@ Lightweight rule: **tick a box, push, repeat**.
 - [x] `docker compose up --build` → all containers **healthy**
 - [x] Filed issues for any regressions (none found)
 
-### 7 · Release
+### 6 · Public Launch Prep
 
-- [ ] Tag **v0.2.5‑rc1** → pipeline green
+- [x] Add `CODE_OF_CONDUCT.md` and `SECURITY.md`
+- [x] Add `.github/ISSUE_TEMPLATE/` and `PULL_REQUEST_TEMPLATE.md`
+- [x] Insert **Alpha** status badge/banner into `README.md`
+- [x] Add "Source" URL in `pyproject.toml`
+- [x] Run secret & history scan (`gitleaks`, `git secrets`) – no leaks found
+- [x] Delete unneeded artefacts (`dist/`, `build/`, caches) – no tracked files found
+- [x] Enable Dependabot alerts & CodeQL analysis – configs added
+- [x] Final secret / binary audit before publishing – no tracked secrets or large binaries
+
+### 7 · Release (✅ shipped in v0.2.5)
+
+- [ ] Tag **v0.2.5-rc1** → pipeline green
 - [ ] Tag **v0.2.5** after manual QA passes
 
 ---
@@ -102,8 +107,11 @@ Lightweight rule: **tick a box, push, repeat**.
 - [ ] Convert remaining stacks/components to declarative `post_copy`
 - [ ] Delete `_cleanup_project_structure` and its tests
 
-### 3 · Allocator Enhancements
+### 3 · Allocator Enhancements & Cleanup
 
+- [ ] Move remaining hard-coded ranges to `config/ports.yaml`
+- [ ] Add admin-tool ranges `8081-8099`
+- [ ] Validation: allocator errors if YAML missing expected service
 - [ ] Release ports on CLI exit (cache eviction)
 - [ ] Support YAML comments/aliases in `config/ports.yaml`
 
