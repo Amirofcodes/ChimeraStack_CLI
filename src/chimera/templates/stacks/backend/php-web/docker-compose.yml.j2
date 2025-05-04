@@ -1,8 +1,10 @@
+{%- set DB_SERVICE = 'postgresql' if DB_ENGINE == 'postgresql' else ('mariadb' if DB_ENGINE == 'mariadb' else 'mysql') -%}
+
 version: '3.9'
 
 services:
   # Database service with conditional image based on DB_ENGINE
-  db:
+  {{ DB_SERVICE }}:
     image: "{{ 'postgres:15-alpine' if DB_ENGINE == 'postgresql' else 'mariadb:11' if DB_ENGINE == 'mariadb' else 'mysql:8.0' }}"
     container_name: "${PROJECT_NAME}-db"
     environment:
@@ -42,7 +44,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: "admin@example.com"
       PGADMIN_DEFAULT_PASSWORD: "${DB_PASSWORD}"
     {% else %}
-      PMA_HOST: "db"
+      PMA_HOST: "{{ DB_SERVICE }}"
       PMA_USER: "${DB_USERNAME}"
       PMA_PASSWORD: "${DB_PASSWORD}"
     {% endif %}
@@ -51,7 +53,7 @@ services:
     networks:
       - app_network
     depends_on:
-      - db
+      - {{ DB_SERVICE }}
 
   # PHP-FPM service
   php:
@@ -60,7 +62,7 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: "${PROJECT_NAME}-php"
     environment:
-      DB_HOST: "db"
+      DB_HOST: "{{ DB_SERVICE }}"
       DB_PORT: "{{ '5432' if DB_ENGINE == 'postgresql' else '3306' }}"
       DB_DATABASE: "${DB_DATABASE}"
       DB_USERNAME: "${DB_USERNAME}"
@@ -72,7 +74,7 @@ services:
     networks:
       - app_network
     depends_on:
-      - db
+      - {{ DB_SERVICE }}
     healthcheck:
       test: ["CMD", "php", "-v"]
       interval: 10s

@@ -62,3 +62,6 @@ post_copy:
   - remove: "src/logo.svg"
   - remove: "src/reportWebVitals.ts"
   - remove: "src/setupTests.ts"
+  - remove_dir: "www"
+  - remove: "index.html"
+  - remove: "public/index.php"

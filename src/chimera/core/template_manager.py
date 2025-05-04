@@ -13,6 +13,8 @@ from .port_allocator import PortAllocator
 from .template_validator import validate_template, TemplateValidationError
 # New Jinja2-powered renderer
 from chimera.utils.render import render_string
+from jinja2 import Environment, StrictUndefined
+from datetime import datetime
 
 console = Console()
 
@@ -532,12 +534,38 @@ class TemplateManager:
         # --------------------------------------------------------------
         for j2_file in list(project_dir.glob("**/*.j2")):
             try:
-                rendered = render_string(j2_file.read_text(), variables)
+                tmpl_src = j2_file.read_text()
+
+                # Build an env with *default* Jinja delimiters ("{{ ... }}") so we can
+                # correctly render stack/component authored templates.
+                env = Environment(undefined=StrictUndefined,
+                                  trim_blocks=True, lstrip_blocks=True)
+
+                # Provide a *forgiving* context – copy variables and add safe defaults
+                ctx = dict(variables)
+                ctx.setdefault("FRONTEND_PORT", ctx.get("VITE_PORT", ""))
+                ctx.setdefault("WEB_PORT", ctx.get("NGINX_PORT", ""))
+                ctx.setdefault("ADMIN_PORT", ctx.get("ADMIN_PORT", ""))
+                ctx.setdefault("PROJECT_NAME", ctx.get(
+                    "PROJECT_NAME", "chimera-project"))
+                ctx.setdefault("DB_ENGINE", ctx.get("DB_ENGINE", "mysql"))
+                ctx.setdefault("TEMPLATE_NAME", variables.get(
+                    "TEMPLATE_NAME", "php-web"))
+                ctx.setdefault("TEMPLATE_VERSION", variables.get(
+                    "TEMPLATE_VERSION", "1.0.0"))
+                ctx.setdefault("CLI_VERSION", variables.get(
+                    "CLI_VERSION", "dev"))
+                ctx.setdefault(
+                    "CREATED_AT", datetime.now().strftime("%Y-%m-%d"))
+
+                template = env.from_string(tmpl_src)
+                rendered = template.render(**ctx)
+
                 target_file = j2_file.with_suffix("")  # drop the .j2
                 target_file.parent.mkdir(parents=True, exist_ok=True)
                 target_file.write_text(rendered)
 
-                # Remove the template to keep workspace tidy
+                # Remove the template after successful render
                 j2_file.unlink(missing_ok=True)
 
                 self._verbose_print(
