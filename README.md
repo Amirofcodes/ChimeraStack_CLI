@@ -97,14 +97,14 @@ Your containers are accessible on dynamically allocated ports printed by the CLI
 
 ---
 
-## 🎨 Template Gallery _(v0.2.2)_
+## 🎨 Template Gallery _(v0.2.5)_
 
-| Category      | Templates                                                   |
-| ------------- | ----------------------------------------------------------- |
-| **Frontend**  | `frontend/react`, `frontend/vue` _(soon)_                   |
-| **Backend**   | `backend/php-web`, `backend/node-express` _(roadmap)_       |
-| **Databases** | `database/mysql`, `database/postgresql`, `database/mariadb` |
-| **Fullstack** | `fullstack/react-php`                                       |
+| Category      | Templates                                                                          |
+| ------------- | ---------------------------------------------------------------------------------- |
+| **Frontend**  | `frontend/react-static`, `frontend/vue` _(soon)_                                   |
+| **Backend**   | `backend/php-web` (MySQL, PostgreSQL, MariaDB), `backend/node-express` _(roadmap)_ |
+| **Databases** | `database/mysql`, `database/postgresql`, `database/mariadb`                        |
+| **Fullstack** | `fullstack/react-php` (MySQL, PostgreSQL, MariaDB)                                 |
 
 Run `chimera list` to explore the full list and search by tag.
 

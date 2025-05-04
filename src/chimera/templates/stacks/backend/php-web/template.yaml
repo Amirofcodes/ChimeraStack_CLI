@@ -3,6 +3,12 @@ version: "1.0.0"
 description: "PHP web development stack with choice of database"
 type: "stack"
 
+# Define available variants
+variants:
+  - mysql
+  - postgresql
+  - mariadb
+
 # Stack composition
 components:
   core_welcome:
@@ -27,10 +33,10 @@ stack:
       version: "8.0"
     - engine: "postgresql"
       name: "PostgreSQL"
-      version: "14"
+      version: "15"
     - engine: "mariadb"
       name: "MariaDB"
-      version: "10.6"
+      version: "11"
 
 # Tags for searching
 tags:
@@ -65,7 +71,7 @@ services:
   admin:
     type: "web"
     port_range: "8080-8099"
-    required: false
+    required: true
     env_prefix: "ADMIN"
     depends_on: ["database"]
     config:
@@ -79,22 +85,30 @@ services:
         env:
           PGADMIN_DEFAULT_EMAIL: "admin@example.com"
           PGADMIN_DEFAULT_PASSWORD: "${DB_PASSWORD}"
-
-# Docker Compose template selection
-compose:
-  variants:
-    mysql: "docker-compose.mysql.yml"
-    postgresql: "docker-compose.postgresql.yml"
-    mariadb: "docker-compose.mariadb.yml"
+      mariadb:
+        image: "phpmyadmin/phpmyadmin"
+        env:
+          PMA_HOST: "db"
+          PMA_PORT: "${DB_PORT}"
 
 # Files to be generated/processed
 files:
-  - source: "docker-compose.${DB_ENGINE}.yml"
+  - source: "docker-compose.yml.j2"
     target: "docker-compose.yml"
-  - source: ".env.${DB_ENGINE}.example"
+  - source: "env.template"
     target: ".env"
-  - source: "www/index.html.template"
-    target: "www/index.html"
+  - source: "public/index.php.j2"
+    target: "public/index.php"
+  - source: "docker/nginx/conf.d/default.conf"
+    target: "docker/nginx/conf.d/default.conf"
+  - source: "docker/php/Dockerfile"
+    target: "docker/php/Dockerfile"
+  - source: "docker/mysql/my.cnf"
+    target: "docker/mysql/my.cnf"
+    condition: "${DB_ENGINE} == 'mysql'"
+  - source: "docker/mariadb/my.cnf"
+    target: "docker/mariadb/my.cnf"
+    condition: "${DB_ENGINE} == 'mariadb'"
   - source: "README.md"
     target: "README.md"
 
@@ -109,13 +123,20 @@ post_create:
   - "php artisan key:generate"
 
 # ----------------------------------------------------
-# Declarative cleanup (v0.3) – replace monolithic Python
+# Declarative cleanup (v0.3)
 # ----------------------------------------------------
 post_copy:
   # Remove compose variant files – a canonical docker-compose.yml is already in place
   - remove: "docker-compose.mysql.yml"
   - remove: "docker-compose.postgresql.yml"
   - remove: "docker-compose.mariadb.yml"
+  - remove: "docker-compose.yml.j2"
+
+  # Remove unused variant config files
+  - remove: "docker/mysql/my.cnf"
+    condition: "${DB_ENGINE} != 'mysql'"
+  - remove: "docker/mariadb/my.cnf"
+    condition: "${DB_ENGINE} != 'mariadb'"
 
   # Remove legacy override files should they exist
   - remove: "docker-compose.mysql.override.yml"

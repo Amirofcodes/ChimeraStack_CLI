@@ -151,3 +151,86 @@ CI will automatically run the validation script for every PR.
 5. Open a pull request – the GitHub Actions suite must pass before review.
 
 Happy hacking! ✨
+
+## 9. Declaring Database Variants
+
+Templates can support multiple database engines through the **variants** feature:
+
+```yaml
+# Define available variants
+variants:
+  - mysql
+  - postgresql
+  - mariadb
+
+# Stack-specific configuration
+stack:
+  type: "backend"
+  default_database: "mysql" # Fallback when no variant specified
+  supported_databases:
+    - engine: "mysql"
+      name: "MySQL"
+      version: "8.0"
+    - engine: "postgresql"
+      name: "PostgreSQL"
+      version: "15"
+    - engine: "mariadb"
+      name: "MariaDB"
+      version: "11"
+```
+
+### Conditional Database Settings
+
+Use Jinja2 conditionals in your `docker-compose.yml.j2` to select the appropriate settings:
+
+```yaml
+services:
+  db:
+    image: "{{ 'postgres:15-alpine' if DB_ENGINE == 'postgresql' else 'mariadb:11' if DB_ENGINE == 'mariadb' else 'mysql:8.0' }}"
+    ports:
+      - "${DB_PORT}:{{ '5432' if DB_ENGINE == 'postgresql' else '3306' }}"
+```
+
+### Conditional File Inclusion
+
+You can conditionally include files based on the selected variant:
+
+```yaml
+files:
+  - source: "docker/mysql/my.cnf"
+    target: "docker/mysql/my.cnf"
+    condition: "${DB_ENGINE} == 'mysql'"
+```
+
+### Cleanup Unused Variant Files
+
+Use `post_copy` to remove files not needed for the selected variant:
+
+```yaml
+post_copy:
+  - remove: "docker/mysql/my.cnf"
+    condition: "${DB_ENGINE} != 'mysql'"
+  - remove: "docker/mariadb/my.cnf"
+    condition: "${DB_ENGINE} != 'mariadb'"
+```
+
+### Database Component Referencing
+
+Reference the appropriate database component based on variant:
+
+```yaml
+components:
+  database:
+    source: "base/database/${DB_ENGINE}"
+    required: true
+```
+
+This enables users to select a database variant with:
+
+```python
+TemplateManager().create_project(
+    "stacks/backend/php-web",
+    "myapi",
+    variant="postgresql"  # or mysql, mariadb
+)
+```

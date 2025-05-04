@@ -6,31 +6,31 @@ Lightweight rule: **tick a box, push, repeat**.
 
 ---
 
-## 🟢 Sprint 1 — Packaging & CI Cleanup (✅ shipped in v0.2.4)
+## 🟢 Sprint 1 — Packaging & CI Cleanup (✅ shipped in v0.2.4)
 
-### 1 · Packaging
+### 1 · Packaging
 
-- [x] Remove `setup.py` & `setup.cfg`
+- [x] Remove `setup.py` & `setup.cfg`
 - [x] Adopt **setuptools‑scm** (`dynamic = ["version"]`)
-- [x] Expose `__version__` in `chimera.__init__`
+- [x] Expose `__version__` in `chimera.__init__`
 
-### 2 · CI / Release Pipeline
+### 2 · CI / Release Pipeline
 
 - [x] Switch to `pipx run build`
-- [x] Wheel + sdist upload to PyPI on tag
-- [x] Build & push Docker image `ghcr.io/chimera/cli:<tag>`
-- [x] Build PyInstaller bundles (macOS & Linux) → attach to release
+- [x] Wheel + sdist upload to PyPI on tag
+- [x] Build & push Docker image `ghcr.io/chimera/cli:<tag>`
+- [x] Build PyInstaller bundles (macOS & Linux) → attach to release
 
-### 3 · Repo Hygiene
+### 3 · Repo Hygiene
 
 - [x] Purge historical binaries (`git filter‑repo`)
-- [x] Add `releases/`, `dist/` to `.gitignore`
+- [x] Add `releases/`, `dist/` to `.gitignore`
 
 ---
 
-## 🟡 Sprint 2 — Sentinel Templates + Core Dashboard (🎯 v0.2.5)
+## 🟡 Sprint 2 — Sentinel Templates + Core Dashboard (🎯 v0.2.5)
 
-### 1 · Core Dashboard
+### 1 · Core Dashboard
 
 - [x] **Create component** `base/core/welcome/`
   - [x] `nginx/conf.d/default.conf` (root → `/usr/share/nginx/html`)
@@ -39,40 +39,40 @@ Lightweight rule: **tick a box, push, repeat**.
 - [x] Inject component into all stacks via `TemplateManager`
 - [x] Unit test: generated projects contain `welcome.html` with no unresolved `{{ … }}`
 
-### 2 · Template Authoring
+### 2 · Template Authoring
 
 - **backend/php-web**
-  - [ ] Migrate MySQL variant to declarative `post_copy` only
-  - [ ] Add PostgreSQL variant
-  - [ ] Add MariaDB variant
-  - [ ] Embed port‑link cards on PHP welcome page
+  - [x] Migrate MySQL variant to declarative `post_copy` only
+  - [x] Add PostgreSQL variant
+  - [x] Add MariaDB variant
+  - [x] Embed port‑link cards on PHP welcome page
 - **fullstack/react-php**
-  - [ ] Update frontend to Vite + Tailwind
+  - [ ] Update frontend to Vite + Tailwind
   - [ ] Point proxy to `/api` for backend
   - [ ] Ensure DB variants map correctly
 - **frontend/react-static**
-  - [ ] Author Vite + Tailwind template folder
+  - [ ] Author Vite + Tailwind template folder
   - [ ] Dockerfile + `.dockerignore`
   - [ ] Make proxy serve built assets
 
-### 3 · Port Allocator Cleanup
+### 3 · Port Allocator Cleanup
 
 - [ ] Move remaining hard‑coded ranges to `config/ports.yaml`
 - [ ] Add admin‑tool ranges `8081‑8099`
 - [ ] Validation: allocator errors if YAML missing expected service
 
-### 4 · Automated Tests & CI
+### 4 · Automated Tests & CI
 
 - [ ] Snapshot test (`docker-compose.yml`, `.env`) for every template/variant
-- [ ] Smoke test: `chimera create … && docker compose config` (GitHub Actions)
+- [ ] Smoke test: `chimera create … && docker compose config` (GitHub Actions)
 - [ ] Unit test: assert zero `{{ … }}` tokens post‑render
 
-### 5 · Docs & DX
+### 5 · Docs & DX
 
-- [ ] Update root `README.md` quick‑start (proxy + dashboard)
-- [ ] Author "Add your own template in 5 steps" in `docs/authoring-templates.md`
+- [x] Update root `README.md` quick‑start (proxy + dashboard)
+- [x] Author "Add your own template in 5 steps" in `docs/authoring-templates.md`
 
-### 6 · Manual Matrix QA — *maintainer‑only*
+### 6 · Manual Matrix QA — _maintainer‑only_
 
 - [ ] `chimera --version` shows semver tag
 - [ ] `chimera list` displays all sentinel templates with variants
@@ -81,67 +81,67 @@ Lightweight rule: **tick a box, push, repeat**.
 - [ ] `docker compose up --build` → all containers **healthy**
 - [ ] File issues for any regressions
 
-### 7 · Release
+### 7 · Release
 
 - [ ] Tag **v0.2.5‑rc1** → pipeline green
 - [ ] Tag **v0.2.5** after manual QA passes
 
 ---
 
-## 🟠 Sprint 3 — ServiceGraph Core (🎯 v0.2.6)
+## 🟠 Sprint 3 — ServiceGraph Core (🎯 v0.2.6)
 
-### 1 · Graph Layer
+### 1 · Graph Layer
 
 - [ ] Implement `ServiceGraph`, `ServiceNode`, `Edge`
 - [ ] TemplateManager builds graph → renders compose/env
 - [ ] Dashboard node re‑renders links from graph
 
-### 2 · Cleanup Migration
+### 2 · Cleanup Migration
 
 - [ ] Convert remaining stacks/components to declarative `post_copy`
 - [ ] Delete `_cleanup_project_structure` and its tests
 
-### 3 · Allocator Enhancements
+### 3 · Allocator Enhancements
 
 - [ ] Release ports on CLI exit (cache eviction)
 - [ ] Support YAML comments/aliases in `config/ports.yaml`
 
-### 4 · Static Analysis
+### 4 · Static Analysis
 
 - [ ] Add `ruff` and `mypy` to pre‑commit + CI
 - [ ] Type‑annotate `template_manager`, `port_*`, `render`
 
-### 5 · Cross‑Platform Smoke
+### 5 · Cross‑Platform Smoke
 
-- [ ] Windows & macOS runners (GitHub Actions) with Docker context workaround
+- [ ] Windows & macOS runners (GitHub Actions) with Docker context workaround
 - [ ] Mark flaky tests and open issues
 
-### 6 · Docs & Release
+### 6 · Docs & Release
 
 - [ ] Update dev guide: ServiceGraph API, component spec
 - [ ] Tag **v0.2.6‑rc1** → publish when CI green
 
 ---
 
-## 🟣 Sprint 4 — Plugin System MVP (🎯 v0.2.7)
+## 🟣 Sprint 4 — Plugin System MVP (🎯 v0.2.7)
 
-### 1 · Plugin API
+### 1 · Plugin API
 
 - [ ] Design `chimera.plugin_api` base class
 - [ ] `[chimera.plugins]` entry‑point discovery
 - [ ] CLI sub‑command `chimera add <plugin>`
 
-### 2 · Sample Plugins
+### 2 · Sample Plugins
 
 - [ ] `redis` – single service
 - [ ] `netdata` – monitoring stack
 
-### 3 · Collision Handling
+### 3 · Collision Handling
 
 - [ ] Detect port clashes after graph mutation
 - [ ] Re‑render dashboard with new links
 
-### 4 · Tests & Docs
+### 4 · Tests & Docs
 
 - [ ] Snapshot tests for plugin‑augmented compose output
 - [ ] Update docs: how to write a plugin
@@ -149,10 +149,10 @@ Lightweight rule: **tick a box, push, repeat**.
 
 ---
 
-## 🔮 Backlog / Nice‑to‑Have
+## 🔮 Backlog / Nice‑to‑Have
 
 - [ ] Port lockfile persistence (`~/.chimera/ports.json`)
 - [ ] `chimera update` command to bump existing projects
-- [ ] VS Code `devcontainer.json` generator
+- [ ] VS Code `devcontainer.json` generator
 - [ ] `chimera doctor` diagnostic command
 - [ ] Prod compose generator (`docker-compose.prod.yml`)
