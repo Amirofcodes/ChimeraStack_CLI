@@ -250,7 +250,7 @@ jobs:
           cp artifacts/python-package-distributions/* release-files/
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
