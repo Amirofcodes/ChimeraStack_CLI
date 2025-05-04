@@ -47,13 +47,13 @@ Lightweight rule: **tick a box, push, repeat**.
   - [x] Add MariaDB variant
   - [x] Embed port‑link cards on PHP welcome page
 - **fullstack/react-php**
-  - [ ] Update frontend to Vite + Tailwind
-  - [ ] Point proxy to `/api` for backend
-  - [ ] Ensure DB variants map correctly
+  - [x] Update frontend to Vite + Tailwind
+  - [x] Point proxy to `/api` for backend
+  - [x] Ensure DB variants map correctly
 - **frontend/react-static**
-  - [ ] Author Vite + Tailwind template folder
-  - [ ] Dockerfile + `.dockerignore`
-  - [ ] Make proxy serve built assets
+  - [x] Author Vite + Tailwind template folder
+  - [x] Dockerfile + `.dockerignore`
+  - [x] Make proxy serve built assets
 
 ### 3 · Port Allocator Cleanup
 

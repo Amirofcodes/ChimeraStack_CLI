@@ -1,12 +1,10 @@
 node_modules
-npm-debug.log
-build
-.dockerignore
-Dockerfile
+dist
 .git
-.github
-.gitignore
-README.md
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.DS_Store
 .env
 .env.local
 .env.development.local

@@ -339,3 +339,86 @@ db:
 ```
 
 This pattern makes it easy to maintain a single `docker-compose.yml.j2` file that supports all database variants.
+
+## Frontend-Only Templates with Vite
+
+For single-service frontend applications that don't require a backend or database, you can create lightweight templates that use Vite for development and Nginx for serving:
+
+### Template Configuration
+
+```yaml
+name: "React Static"
+description: "Vite + React + Tailwind single-service stack"
+type: "stack"
+version: "1.0.0"
+tags:
+  - frontend
+  - react
+  - vite
+
+stack:
+  default_database: none # Skip database logic
+  frontend:
+    framework: "react"
+    version: "18"
+    dev_server: true
+
+variants: ["default"] # Only one variant needed
+
+components:
+  core_welcome:
+    source: "base/core/welcome"
+    required: true
+```
+
+### Nginx Configuration
+
+For frontend-only templates, the Nginx configuration is simpler as it only needs to proxy requests to the Vite dev server:
+
+```nginx
+server {
+    listen 80;
+
+    # Serve welcome dashboard from standard location
+    root /usr/share/nginx/html;
+
+    # All requests - proxy to frontend
+    location / {
+        proxy_pass http://frontend:${FRONTEND_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### Docker Setup for Frontend Templates
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+# Build for production (assets in /app/dist)
+RUN npm run build
+# Development mode
+ARG FRONTEND_PORT=3000
+ENV FRONTEND_PORT=${FRONTEND_PORT}
+CMD ["npm","run","dev","--","--host","0.0.0.0","--port","${FRONTEND_PORT}"]
+```
+
+This setup allows for both development mode with HMR and builds production-ready assets.
+
+### Environment Variables
+
+Only minimal environment variables are needed:
+
+```
+FRONTEND_PORT=${FRONTEND_PORT}
+VITE_BACKEND_URL=http://localhost:${WEB_PORT}/api  # For future integrations
+```
+
+The `VITE_` prefix is required for variables to be exposed to the frontend in Vite.

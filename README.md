@@ -101,7 +101,7 @@ Your containers are accessible on dynamically allocated ports printed by the CLI
 
 | Category      | Templates                                                                                  |
 | ------------- | ------------------------------------------------------------------------------------------ |
-| **Frontend**  | `frontend/react-static`, `frontend/vue` _(soon)_                                           |
+| **Frontend**  | `frontend/react-static` (Vite+Tailwind frontend-only template), `frontend/vue` _(soon)_    |
 | **Backend**   | `backend/php-web` (MySQL, PostgreSQL, MariaDB), `backend/node-express` _(roadmap)_         |
 | **Databases** | `database/mysql`, `database/postgresql`, `database/mariadb`                                |
 | **Fullstack** | `fullstack/react-php` (Vite+Tailwind frontend + PHP backend with MySQL/PostgreSQL/MariaDB) |

@@ -1,41 +1,64 @@
-name: react-static
-description: A static React application with development server
-category: frontend
-requires_ports:
+name: "React Static"
+description: "Vite + React + Tailwind single-service stack"
+type: "stack"
+version: "1.0.0"
+tags:
   - frontend
+  - react
+  - vite
+  - tailwind
 
-# Stack composition
+stack:
+  default_database: none # ensures TemplateManager skips DB logic
+  frontend:
+    framework: "react"
+    version: "18"
+    dev_server: true
+
+variants: ["default"]
+
 components:
   core_welcome:
-    source: base/core/welcome
+    source: "base/core/welcome"
     required: true
 
+# Frontend service configuration
 services:
   frontend:
-    # Use build context instead of image
-    build: .
-    ports:
-      # Map host port (allocated dynamically) to container port 3000
-      - "${FRONTEND_PORT}:3000"
+    type: "frontend"
+    port_range: "3000-3999"
+    env_prefix: "FRONTEND"
+    build:
+      context: "."
+      dockerfile: "Dockerfile"
     volumes:
-      # Mount local source code into /app
-      - .:/app
-      # Add a named volume or anonymous volume to persist node_modules
-      # This prevents host node_modules from overriding container's
-      - /app/node_modules
+      - ".:/app"
+      - "/app/node_modules"
     environment:
-      # Ensure Create React App uses the correct port inside the container
-      - PORT=3000
-# Remove mysql, phpmyadmin, db_default as they are not used
-variables:
-  project_name: "{{ project_name }}"
+      - "VITE_BACKEND_URL=http://localhost:${WEB_PORT}/api"
+      - "FRONTEND_PORT=${FRONTEND_PORT}"
+
+# Welcome page configuration
+welcome_page:
+  sections:
+    - title: "Frontend (React)"
+      service: "frontend"
+      url: "http://localhost:${FRONTEND_PORT}"
+      dev_server: true
+
+# Files to be generated/processed
 files:
-  # Removed docker-compose.yml - it will be generated
-  - src/App.tsx: src/App.tsx
-  - public/index.html: public/index.html
-  - package.json: package.json
-  - .dockerignore: .dockerignore
-  - README.md: README.md # Keep README template
-  - env.template: .env # Keep .env template
-rename:
-  env.template: .env
+  - source: "docker-compose.yml.j2"
+    target: "docker-compose.yml"
+    jinja: true
+  - source: "env.template"
+    target: ".env"
+
+# Post-creation cleanup
+post_copy:
+  # Remove any CRA remnants if they exist
+  - remove: "src/App.css"
+  - remove: "src/index.css.old"
+  - remove: "src/logo.svg"
+  - remove: "src/reportWebVitals.ts"
+  - remove: "src/setupTests.ts"
