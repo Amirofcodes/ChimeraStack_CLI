@@ -522,6 +522,32 @@ class TemplateManager:
             return result
 
     def _process_project_files(self, project_dir: Path, variables: dict) -> None:
+        # --------------------------------------------------------------
+        # 1. Render any Jinja2 templates ("*.j2") discovered inside the
+        #    freshly copied project directory.  We strip the ".j2" suffix
+        #    to obtain the *canonical* destination path so that subsequent
+        #    processing (e.g. YAML manipulation) operates on the final
+        #    files.  After successful rendering the original template is
+        #    deleted to avoid confusion.
+        # --------------------------------------------------------------
+        for j2_file in list(project_dir.glob("**/*.j2")):
+            try:
+                rendered = render_string(j2_file.read_text(), variables)
+                target_file = j2_file.with_suffix("")  # drop the .j2
+                target_file.parent.mkdir(parents=True, exist_ok=True)
+                target_file.write_text(rendered)
+
+                # Remove the template to keep workspace tidy
+                j2_file.unlink(missing_ok=True)
+
+                self._verbose_print(
+                    f"[green]✓[/] Rendered template: {j2_file.relative_to(project_dir)} -> {target_file.relative_to(project_dir)}"
+                )
+            except Exception as exc:
+                console.print(
+                    f"[red]Error rendering template {j2_file.relative_to(project_dir)}:[/] {exc}"
+                )
+
         # First, try to process existing .env files
         env_file = project_dir / '.env.example'
         if env_file.exists():
@@ -1218,6 +1244,31 @@ APP_DEBUG=true
                                 volume['name'] = volume_base_name
                             else:
                                 volume['name'] = f"{project_name}_{volume_base_name}"
+
+            # --------------------------------------------------
+            # Guard-rail: detect ``depends_on`` entries that point
+            # to services not declared in the same compose file.
+            # This surfaced during manual QA when a template still
+            # referenced "mysql" after the service had been renamed
+            # to the generic "db".  We do *not* fail the build – we
+            # merely print a warning so the author can fix the stack.
+            # --------------------------------------------------
+            declared = set(content.get('services', {}).keys())
+            for svc_name, svc_def in content.get('services', {}).items():
+                deps = []
+                if isinstance(svc_def, dict):
+                    if 'depends_on' in svc_def:
+                        deps_raw = svc_def['depends_on']
+                        if isinstance(deps_raw, list):
+                            deps = deps_raw
+                        elif isinstance(deps_raw, dict):
+                            deps = list(deps_raw.keys())
+
+                for dep in deps:
+                    if dep not in declared:
+                        console.print(
+                            f"[yellow]Warning:[/] Service '{svc_name}' depends on undefined service '{dep}' in {file_path.relative_to(Path.cwd())}"
+                        )
 
             # Replace variables using the Jinja2 renderer (handles both `${VAR}` and `$VAR`)
             content_str = yaml.dump(content)

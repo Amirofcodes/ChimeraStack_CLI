@@ -119,7 +119,8 @@ post_copy:
   - remove: "docker-compose.mysql.yml"
   - remove: "docker-compose.mariadb.yml"
   - remove: "docker-compose.postgresql.yml"
-  - remove: "docker-compose.base.yml" # If exists
+  # Remove legacy static compose file; the Jinja variant now renders the canonical compose
+  - remove: "docker-compose.yml"
 
   # Delete empty or obsolete directories
   - remove_dir: "database"
