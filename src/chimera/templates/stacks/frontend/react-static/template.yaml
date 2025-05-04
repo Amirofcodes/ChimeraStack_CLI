@@ -69,5 +69,5 @@ post_copy:
   - remove: "src/reportWebVitals.ts"
   - remove: "src/setupTests.ts"
   - remove_dir: "www"
-  - remove: "index.html"
+  # Keep root index.html as Vite entry; only remove unused PHP placeholder
   - remove: "public/index.php"
