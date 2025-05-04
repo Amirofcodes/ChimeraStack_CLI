@@ -34,6 +34,8 @@ services:
       - frontend
     networks:
       - app_network
+    environment:
+      - "FRONTEND_PORT=${FRONTEND_PORT}"
 
 networks:
   app_network:
