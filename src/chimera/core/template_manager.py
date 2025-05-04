@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 import shutil
 import yaml
 import docker
+import warnings
 from rich.console import Console
 from .port_scanner import PortScanner
 from .port_allocator import PortAllocator
@@ -167,8 +168,16 @@ class TemplateManager:
                 f"[red]Error reading template config from {path}: {str(e)}")
             return None
 
-    def create_project(self, template_id: str, project_name: str, target_dir: Path | str = None, variant: str = None) -> bool:
+    def create_project(self, template_id: str = None, project_name: str = None, target_dir: Path | str = None, variant: str = None, *, template: str = None) -> bool:
         try:
+            if template is not None and template_id is None:
+                warnings.warn(
+                    "`template` arg is deprecated; use `template_id`", DeprecationWarning)
+                template_id = template
+            elif template_id is None:
+                raise ValueError(
+                    "Either template_id or template parameter must be provided")
+
             template_path = self.templates_dir / template_id
             if not self._is_valid_template(template_path):
                 console.print(
@@ -291,6 +300,10 @@ class TemplateManager:
             if 'frontend' in port_mappings:
                 port_variables['FRONTEND_PORT'] = str(
                     port_mappings['frontend'])
+                # Also ensure the frontend port is in the .env file with standard naming
+                port_variables['VITE_PORT'] = str(port_mappings['frontend'])
+                port_variables['DEV_SERVER_PORT'] = str(
+                    port_mappings['frontend'])
 
             # Include all original port mappings with standard naming
             for service_name, port in port_mappings.items():
@@ -305,6 +318,17 @@ class TemplateManager:
                 'DB_ROOT_PASSWORD': 'rootsecret',
                 **port_variables
             }
+
+            # Add web port to variables if allocated
+            if 'web' in port_mappings:
+                variables['WEB_PORT'] = str(port_mappings['web'])
+                variables['NGINX_PORT'] = str(port_mappings['web'])
+
+            # Always add frontend port if allocated
+            if 'frontend' in port_mappings:
+                variables['FRONTEND_PORT'] = str(port_mappings['frontend'])
+                variables['VITE_PORT'] = str(port_mappings['frontend'])
+                variables['DEV_SERVER_PORT'] = str(port_mappings['frontend'])
 
             # Add variant to variables if provided
             if variant and variant != 'default':
@@ -575,14 +599,24 @@ class TemplateManager:
         md_files = list(project_dir.glob('**/*.md'))
         for md_file in md_files:
             try:
+                content = md_file.read_text()
+                # Make sure WEB_PORT and FRONTEND_PORT exist in variables for README files
+                doc_vars = variables.copy()
+                if 'WEB_PORT' not in doc_vars and any('${WEB_PORT}' in content for content in [content]):
+                    doc_vars['WEB_PORT'] = variables.get('WEB_PORT', '8000')
+                if 'FRONTEND_PORT' not in doc_vars and any('${FRONTEND_PORT}' in content for content in [content]):
+                    doc_vars['FRONTEND_PORT'] = variables.get(
+                        'FRONTEND_PORT', '3000')
+
                 # Render markdown docs using Jinja2
-                rendered = render_string(md_file.read_text(), variables)
+                rendered = render_string(content, doc_vars)
                 md_file.write_text(rendered)
 
                 self._verbose_print(
                     f"[green]✓[/] Updated documentation: {md_file.relative_to(project_dir)}")
-            except Exception:
-                pass
+            except Exception as e:
+                console.print(
+                    f"[yellow]Warning: Could not process markdown file {md_file}: {str(e)}[/]")
 
         # Create public directory with proper router
         public_dir = project_dir / 'public'
@@ -990,20 +1024,46 @@ Environment variables are stored in the `.env` file. Edit this file to change:
         """Create a default .env file with essential variables when none exists in the template."""
         env_path = project_dir / '.env'
         db_engine = variables.get('DB_ENGINE', 'mysql')
+        is_frontend = 'FRONTEND_PORT' in variables
+        has_web_port = 'WEB_PORT' in variables
+        has_nginx = any(path.name == 'nginx' or 'nginx' in path.name.lower() for path in project_dir.glob('**/Dockerfile*')) or \
+            'nginx' in (project_dir / 'docker-compose.yml').read_text().lower() if (
+                project_dir / 'docker-compose.yml').exists() else False
 
         # Build comprehensive environment variables content
         env_content = f"""# Project Settings
 PROJECT_NAME={variables.get('PROJECT_NAME', 'chimera-project')}
+"""
 
+        # Add frontend section if applicable
+        if is_frontend:
+            env_content += f"""
+# Frontend Configuration
+FRONTEND_PORT={variables.get('FRONTEND_PORT', '3000')}
+VITE_PORT={variables.get('VITE_PORT', variables.get('FRONTEND_PORT', '3000'))}
+DEV_SERVER_PORT={variables.get('DEV_SERVER_PORT', variables.get('FRONTEND_PORT', '3000'))}
+"""
+
+        # Add web server section if applicable - needed for nginx
+        if has_web_port or (is_frontend and has_nginx):
+            env_content += f"""
 # Web Server
 NGINX_PORT={variables.get('NGINX_PORT', variables.get('WEB_PORT', '8000'))}
 WEB_PORT={variables.get('WEB_PORT', variables.get('NGINX_PORT', '8000'))}
+"""
 
+        # Add PHP section if not a frontend-only template
+        if not is_frontend or ('WEB_PORT' in variables and 'php' in project_dir.glob('**/Dockerfile*')):
+            env_content += f"""
 # PHP Configuration
 PHP_VERSION=8.1
 PHP_DISPLAY_ERRORS=On
 PHP_ERROR_REPORTING=E_ALL
+"""
 
+        # Add database section if DB_PORT is in variables
+        if 'DB_PORT' in variables:
+            env_content += f"""
 # Database Configuration
 DB_HOST={db_engine if db_engine != 'mariadb' else 'mariadb'}
 # External port mapping - inside Docker, the internal port remains standard (3306 for MySQL/MariaDB, 5432 for PostgreSQL)
@@ -1015,21 +1075,21 @@ DB_PASSWORD={variables.get('DB_PASSWORD', 'secret')}
 DB_ROOT_PASSWORD={variables.get('DB_ROOT_PASSWORD', 'rootsecret')}
 """
 
-        # Add database-specific variables
-        if db_engine == 'mysql' or db_engine == 'mariadb':
-            env_content += f"MYSQL_PORT={variables.get('DB_PORT', '3306')}\n"
-        elif db_engine == 'postgresql':
-            env_content += f"POSTGRES_PORT={variables.get('DB_PORT', '5432')}\n"
+            # Add database-specific variables
+            if db_engine == 'mysql' or db_engine == 'mariadb':
+                env_content += f"MYSQL_PORT={variables.get('DB_PORT', '3306')}\n"
+            elif db_engine == 'postgresql':
+                env_content += f"POSTGRES_PORT={variables.get('DB_PORT', '5432')}\n"
 
-        # Add admin tool variables
-        if db_engine in ['mysql', 'mariadb'] and any(k for k in variables if 'PHPMYADMIN' in k or 'ADMIN_PORT' in k):
-            env_content += f"""
+            # Add admin tool variables
+            if db_engine in ['mysql', 'mariadb'] and any(k for k in variables if 'PHPMYADMIN' in k or 'ADMIN_PORT' in k):
+                env_content += f"""
 # phpMyAdmin Configuration
 PHPMYADMIN_PORT={variables.get('PHPMYADMIN_PORT', variables.get('ADMIN_PORT', '8080'))}
 PMA_HOST={db_engine}
 """
-        elif db_engine == 'postgresql' and any(k for k in variables if 'PGADMIN' in k or 'ADMIN_PORT' in k or True):
-            env_content += f"""
+            elif db_engine == 'postgresql' and any(k for k in variables if 'PGADMIN' in k or 'ADMIN_PORT' in k):
+                env_content += f"""
 # pgAdmin Configuration
 PGADMIN_PORT={variables.get('PGADMIN_PORT', variables.get('ADMIN_PORT', '8080'))}
 PGADMIN_DEFAULT_EMAIL=admin@example.com
@@ -1048,7 +1108,7 @@ APP_DEBUG=true
             f.write(env_content)
 
         self._verbose_print(
-            f"[green]✓[/] Created .env file with {db_engine} configuration")
+            f"[green]✓[/] Created .env file with configuration")
 
     def _process_yaml_file(self, file_path: Path, variables: dict, is_compose: bool = False) -> None:
         try:
@@ -1110,15 +1170,24 @@ APP_DEBUG=true
                     # Update ports if defined
                     if 'ports' in service and isinstance(service['ports'], list):
                         for i, port_mapping in enumerate(service['ports']):
-                            if ':' in str(port_mapping):
-                                host_port, container_port = str(
-                                    port_mapping).split(':')
+                            # Guard against non-string port entries
+                            port_mapping_str = str(port_mapping)
+                            if ':' in port_mapping_str:
+                                try:
+                                    # Use rsplit to handle cases with multiple colons (e.g. ipv6 or protocol specs)
+                                    host_port, container_port = port_mapping_str.rsplit(
+                                        ':', 1)
 
-                                # Replace variable references
-                                if host_port.startswith('${') and host_port.endswith('}'):
-                                    var_name = host_port[2:-1]
-                                    if var_name in variables:
-                                        service['ports'][i] = f"{variables[var_name]}:{container_port}"
+                                    # Replace variable references
+                                    if host_port.startswith('${') and host_port.endswith('}'):
+                                        var_name = host_port[2:-1]
+                                        if var_name in variables:
+                                            service['ports'][i] = f"{variables[var_name]}:{container_port}"
+                                except ValueError:
+                                    # Skip malformed port entries
+                                    console.print(
+                                        f"[yellow]Warning:[/] Skipping malformed port mapping: {port_mapping_str}")
+                                    continue
 
                 # Update networks
                 if 'networks' in content:
@@ -1228,6 +1297,14 @@ APP_DEBUG=true
         stack_config = template_config.get('stack', {})
         welcome_config = template_config.get('welcome_page', {})
 
+        # Check which components are present to determine required services
+        has_db = 'database' in components
+        has_backend = 'backend' in components
+        has_nginx = any(
+            svc.get('image', '').startswith('nginx') or svc_name == 'nginx'
+            for svc_name, svc in services.items()
+        )
+
         # Process standard services (old format)
         for service_name, service_config in services.items():
             port_type = service_config.get('type')
@@ -1302,8 +1379,41 @@ APP_DEBUG=true
                     used_ports.add(port)
                     self._reserved_ports.add(port)
 
-        # Add default ports for common services if not already allocated
-        core_services = ['db', 'admin']
+        # Frontend-only shortcut: If no database or backend components,
+        # only allocate frontend port and web port (if nginx is present)
+        if not has_db and not has_backend:
+            # Make sure frontend port is allocated
+            if 'frontend' not in port_mappings:
+                port = self._find_available_port('3000-3999', used_ports)
+                if port is None:
+                    console.print(
+                        f"[red]Could not allocate port for frontend[/]")
+                    return {}
+                port_mappings['frontend'] = port
+                used_ports.add(port)
+                self._reserved_ports.add(port)
+
+            # For frontend stacks with nginx, always allocate a web port
+            if has_nginx and 'web' not in port_mappings:
+                port = self._find_available_port('8000-8999', used_ports)
+                if port is None:
+                    console.print(
+                        f"[red]Could not allocate port for web server[/]")
+                    return {}
+                port_mappings['web'] = port
+                used_ports.add(port)
+                self._reserved_ports.add(port)
+
+            return port_mappings
+
+        # For database and backend stacks, determine which core services to allocate
+        core_services = []
+        if has_nginx or has_backend:
+            core_services.append('web')
+        if has_db:
+            core_services += ['db', 'admin']
+
+        # Add default ports for required core services if not already allocated
         for key in core_services:
             if key not in port_mappings:
                 port_range = default_ports[key]
@@ -1314,17 +1424,6 @@ APP_DEBUG=true
                 port_mappings[key] = port
                 used_ports.add(port)
                 self._reserved_ports.add(port)
-
-        # Always allocate web port for PHP templates
-        if 'web' not in port_mappings:
-            port = self._find_available_port('8000-8999', used_ports)
-            if port is None:
-                console.print(
-                    f"[red]Could not allocate port for web server[/]")
-                return {}
-            port_mappings['web'] = port
-            used_ports.add(port)
-            self._reserved_ports.add(port)
 
         return port_mappings
 
