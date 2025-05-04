@@ -146,8 +146,4 @@ post_copy:
   # Keep core_welcome dashboard files
   # - remove_dir: "www"   # removed per dual-page approach
 
-  # Standardise Nginx root directive – ensure it points to /public
-  - patch_file:
-      path: "docker/nginx/conf.d/default.conf"
-      replace: "root /var/www/html;"
-      with: "root /var/www/html/public;"
+  # root already points correctly after dual-page update
