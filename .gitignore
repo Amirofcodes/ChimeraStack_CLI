@@ -178,3 +178,6 @@ codebase.md
 gitloghistory.txt
 
 tests/__pycache__/
+
+# Node
+node_modules/
