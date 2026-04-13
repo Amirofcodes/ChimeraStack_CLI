@@ -1,7 +1,7 @@
-pytest==9.0.2
+pytest==9.0.3
 pytest-cov==7.1.0
 flake8==7.3.0
 black==26.3.1
-mypy==1.19.1
+mypy==1.20.1
 safety>=2.3.5
 packaging>=22.0
